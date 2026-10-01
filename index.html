@@ -3,7 +3,11 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>FinanceFlow Pro | Filter Master Fixed</title>
+    <title>Minhas Finanças | Gestão Completa</title>
+    
+    <!-- FAVICON: Logo do Raio na Aba do Navegador -->
+    <link rel="icon" type="image/svg+xml" href="data:image/svg+xml,<svg xmlns=%22http://www.w3.org/2000/svg%22 viewBox=%220 0 512 512%22><path fill=%22%236366f1%22 d=%22M256 0L64 256h128v256l192-256H256z%22/></svg>">
+
     <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
     <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
     <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
@@ -29,14 +33,46 @@
         @keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
         .reveal { animation: slideUp 0.5s ease forwards; }
 
-        /* --- RENDERIZADORES DE ESTILO --- */
+        /* --- TELA DE AUTENTICAÇÃO --- */
+        #auth-overlay {
+            position: fixed; top: 0; left: 0; width: 100%; height: 100%;
+            background-color: var(--bg-body);
+            display: flex; justify-content: center; align-items: center;
+            z-index: 9999; transition: var(--transition);
+        }
+        .auth-card {
+            background: var(--bg-card); border: 1px solid var(--border);
+            padding: 3rem; border-radius: 24px; width: 100%; max-width: 400px;
+            text-align: center; box-shadow: 0 20px 50px rgba(0,0,0,0.5);
+            animation: modalPop 0.4s ease;
+        }
+        .auth-logo { 
+            font-size: 1.5rem; font-weight: 700; margin-bottom: 2rem; 
+            display: flex; align-items: center; justify-content: center; gap: 10px; 
+        }
+        .auth-logo i { color: var(--accent); font-size: 2rem; }
+        .auth-card h2 { margin-bottom: 0.5rem; font-size: 1.5rem; }
+        .auth-card p { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; }
+        .auth-field { text-align: left; margin-bottom: 1.5rem; }
+        .auth-field label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; margin-left: 4px; }
+        .auth-field input { 
+            width: 100%; padding: 12px 16px; background: #1a1a1c; border: 1px solid var(--border); 
+            border-radius: 12px; color: white; outline: none; transition: var(--transition); 
+        }
+        .auth-field input:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .auth-btn { 
+            width: 100%; padding: 14px; background: var(--accent); color: white; 
+            border: none; border-radius: 12px; font-weight: 600; cursor: pointer; 
+            transition: var(--transition); margin-top: 1rem; 
+        }
+        .auth-btn:hover { filter: brightness(1.2); transform: scale(1.02); }
+        .hidden { display: none !important; }
+
+        /* --- TEMAS --- */
         body.theme-3d .bento-card, body.theme-3d .form-container, body.theme-3d .transactions-container, body.theme-3d .menu-item, body.theme-3d .theme-option, body.theme-3d .chart-widget, body.theme-3d .filter-bar {
             box-shadow: 6px 6px 12px var(--border), -6px -6px 12px rgba(255,255,255,0.05);
             border: 1px solid var(--border);
         }
-        body.theme-3d .btn-primary { box-shadow: 3px 3px 6px var(--border), -3px -3px 6px rgba(255,255,255,0.1); }
-        body.theme-3d .btn-primary:active { box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4); transform: scale(0.98); }
-
         body.theme-glass .bento-card, body.theme-glass .form-container, body.theme-glass .transactions-container, body.theme-glass .modal-card, body.theme-glass .chart-widget, body.theme-glass .filter-bar {
             background: var(--bg-card) !important;
             backdrop-filter: blur(20px) saturate(160%);
@@ -44,15 +80,11 @@
             border: 1px solid rgba(255, 255, 255, 0.15) !important;
             box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.4);
         }
-        body.theme-glass .menu-item.active { background: rgba(99, 102, 241, 0.4) !important; backdrop-filter: blur(5px); }
-
         body.theme-matte .bento-card, body.theme-matte .form-container, body.theme-matte .transactions-container, body.theme-matte .chart-widget, body.theme-matte .filter-bar {
             box-shadow: none !important;
             border: 2px solid var(--border) !important;
             background: var(--bg-card) !important;
         }
-        body.theme-matte .btn-primary { box-shadow: none !important; background: var(--accent) !important; filter: saturate(0.8); }
-        body.theme-matte .balance-card { background: var(--bg-card) !important; border: 2px solid var(--accent); }
 
         #app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
 
@@ -70,11 +102,32 @@
         .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -1px; }
         .header p { color: var(--text-muted); font-size: 0.9rem; }
 
+        /* Botão Sair */
+        .logout-btn {
+            background: transparent;
+            border: 1px solid var(--border);
+            color: var(--text-muted);
+            padding: 8px 16px;
+            border-radius: 12px;
+            cursor: pointer;
+            font-size: 0.8rem;
+            font-weight: 600;
+            transition: var(--transition);
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            margin-bottom: 1rem;
+        }
+        .logout-btn:hover {
+            color: var(--danger);
+            border-color: var(--danger);
+            background: rgba(244, 63, 94, 0.1);
+        }
+
         /* FILTER BAR */
         .filter-bar { 
             display: flex; gap: 1rem; align-items: center; background: var(--bg-card); 
             border: 1px solid var(--border); padding: 1rem; border-radius: 16px; margin-bottom: 2rem;
-            transition: var(--transition);
         }
         .filter-group { display: flex; align-items: center; gap: 10px; }
         .filter-group label { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
@@ -91,40 +144,21 @@
         .card-value { font-size: 2rem; font-weight: 700; letter-spacing: -1px; }
         .balance-card { background: linear-gradient(135deg, var(--accent) 0%, var(--bg-card) 100%); border-color: var(--accent); }
 
-        /* ANALYTICS SECTION */
+        /* ANALYTICS */
         .analytics-section { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; margin-bottom: 3rem; }
         .graph-selector { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; height: fit-content; }
-        .graph-selector h3 { font-size: 1rem; margin-bottom: 1.5rem; text-align: center; }
-        .graph-options-list { display: flex; flex-direction: column; gap: 8px; max-height: 600px; overflow-y: auto; padding-right: 5px; }
+        .graph-options-list { display: flex; flex-direction: column; gap: 8px; max-height: 600px; overflow-y: auto; }
         .graph-option-btn { 
             background: #1a1a1c; border: 1px solid var(--border); color: var(--text-muted); 
             padding: 10px 15px; border-radius: 12px; cursor: pointer; text-align: left; 
             font-size: 0.8rem; transition: var(--transition); display: flex; align-items: center; gap: 10px;
         }
-        .graph-option-btn:hover { background: #27272a; color: var(--text-main); }
         .graph-option-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
 
-        .charts-grid { 
-            display: grid; 
-            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
-            gap: 1.5rem; 
-            align-content: start;
-        }
-        .chart-widget { 
-            background: var(--bg-card); border: 1px solid var(--border); 
-            border-radius: 24px; padding: 1.5rem; transition: var(--transition); 
-            position: relative; min-height: 400px; display: flex; flex-direction: column;
-        }
-        .chart-widget-header { 
-            display: flex; justify-content: space-between; align-items: center; 
-            margin-bottom: 1rem; padding: 0 10px;
-        }
-        .chart-widget-header h4 { font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
-        .remove-chart-btn { 
-            background: transparent; border: none; color: var(--text-muted); 
-            cursor: pointer; transition: var(--transition); font-size: 0.9rem; 
-        }
-        .remove-chart-btn:hover { color: var(--danger); }
+        .charts-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); gap: 1.5rem; }
+        .chart-widget { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; min-height: 400px; position: relative; }
+        .chart-widget-header { display: flex; justify-content: space-between; align-items: center; margin-bottom: 1rem; }
+        .remove-chart-btn { background: transparent; border: none; color: var(--text-muted); cursor: pointer; }
 
         /* FORM */
         .form-container { max-width: 600px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border); padding: 2.5rem; border-radius: 24px; }
@@ -132,38 +166,38 @@
         .full-width { grid-column: span 2; }
         .input-field { margin-bottom: 1.2rem; }
         .input-field label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; margin-left: 4px; }
-        .input-field input, .input-field select, .input-field textarea { width: 100%; padding: 12px 16px; background: #1a1a1c; border: 1px solid var(--border); border-//Cálculo simplificado corrected
-        border-radius: 12px; color: white; outline: none; transition: var(--transition); }
-        .input-field input:focus, .input-field select:focus, .input-field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .input-field input, .input-field select, .input-field textarea { width: 100%; padding: 12px 16px; background: #1a1a1c; border: 1px solid var(--border); border-radius: 12px; color: white; outline: none; }
         .btn-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 1rem; }
-        .btn-primary:hover { filter: brightness(1.2); transform: scale(1.02); }
-        .btn-secondary { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: var(--transition); margin-top: 10px; font-weight: 500; }
-        .btn-secondary:hover { color: var(--text-main); border-color: var(--text-muted); }
 
         /* LIST */
         .transactions-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; }
         .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-radius: 16px; transition: var(--transition); border-bottom: 1px solid #1a1a1c; }
         .transaction-item:hover { background: #1a1a1c; }
-        .item-info { display: flex; align-items: center; gap: 12px; }
-        .item-icon { width: 40px; height: 40px; background: #1a1a1c; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
         .amount-pos { color: var(--success); font-weight: 600; }
         .amount-neg { color: var(--danger); font-weight: 600; }
 
-        /* THEMES GRID */
-        .themes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; margin-top: 2rem; }
-        .theme-option { background: var(--bg-card); border: 1px solid var(--border); padding: 1rem; border-radius: 16px; cursor: pointer; transition: var(--transition); text-align: center; font-size: 0.75rem; }
-        .theme-option:hover { border-color: var(--accent); transform: scale(1.05); }
+        /* SETTINGS & USER MGMT */
+        .settings-tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
+        .tab-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; font-weight: 600; padding: 8px 16px; transition: var(--transition); border-radius: 8px; }
+        .tab-btn.active { color: var(--text-main); background: var(--accent); }
+        .user-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; }
+        .user-table th, .user-table td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
+        .user-table th { background: #1a1a1c; color: var(--text-muted); font-size: 0.8rem; }
+        .btn-action { padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 600; transition: var(--transition); }
+        .btn-reset { background: var(--accent); color: white; margin-right: 5px; }
+        .btn-delete { background: var(--danger); color: white; }
+
+        .themes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; }
+        .theme-option { background: var(--bg-card); border: 1px solid var(--border); padding: 1rem; border-radius: 16px; cursor: pointer; text-align: center; font-size: 0.75rem; }
         .theme-option.active { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
         .theme-preview { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: bold; color: white; }
 
         /* MODAL */
-        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
-        .modal-card { background: var(--bg-card); border: 1px solid var(--border); width: 100%; max-width: 400px; border-radius: 24px; padding: 2rem; text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 10000; padding: 20px; }
+        .modal-card { background: var(--bg-card); border: 1px solid var(--border); width: 100%; max-width: 400px; border-radius: 24px; padding: 2rem; text-align: center; animation: modalPop 0.3s ease; }
         .modal-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 1.5rem; }
-        .modal-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; }
-        .modal-msg { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.5; }
-        .modal-btns { display: flex; gap: 1rem; justify-content: center; }
-        .btn-modal { padding: 12px 24px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: var(--transition); flex: 1; }
+        .modal-btns { display: flex; gap: 1rem; justify-content: center; margin-top: 2rem; }
+        .btn-modal { padding: 12px 24px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; flex: 1; }
         .btn-confirm { background: var(--accent); color: white; }
         .btn-cancel { background: #27272a; color: var(--text-main); }
 
@@ -187,20 +221,59 @@
 </head>
 <body id="body">
 
+    <!-- TELA DE AUTENTICAÇÃO -->
+    <div id="auth-overlay">
+        <div id="auth-register" class="auth-card hidden">
+            <div class="auth-logo"><i class="fa-solid fa-bolt"></i> Minhas Finanças</div>
+            <h2>Primeiro Acesso</h2>
+            <p>Crie sua conta para começar a gerenciar suas finanças.</p>
+            <div class="auth-field">
+                <label>Nome de Usuário</label>
+                <input type="text" id="reg-user" placeholder="Ex: Alexandre">
+            </div>
+            <div class="auth-field">
+                <label>Nova Senha</label>
+                <input type="password" id="reg-pass" placeholder="Digite sua senha">
+            </div>
+            <div class="auth-field">
+                <label>Confirmar Senha</label>
+                <input type="password" id="reg-pass-confirm" placeholder="Repita a senha">
+            </div>
+            <button class="auth-btn" onclick="registerAccount()">Criar Conta</button>
+            <p style="margin-top: 1.5rem; font-size: 0.8rem; cursor: pointer; color: var(--accent)" onclick="toggleAuthScreen('login')">Já tenho conta? Entrar</p>
+        </div>
+
+        <div id="auth-login" class="auth-card hidden">
+            <div class="auth-logo"><i class="fa-solid fa-bolt"></i> Minhas Finanças</div>
+            <h2>Bem-vindo</h2>
+            <p>Insira seus dados para acessar o painel.</p>
+            <div class="auth-field">
+                <label>Usuário</label>
+                <input type="text" id="login-user" placeholder="Seu nome de usuário">
+            </div>
+            <div class="auth-field">
+                <label>Senha</label>
+                <input type="password" id="login-pass" placeholder="Digite sua senha">
+            </div>
+            <button class="auth-btn" onclick="login()">Entrar no Sistema</button>
+            <p style="margin-top: 1.5rem; font-size: 0.8rem; cursor: pointer; color: var(--accent)" onclick="toggleAuthScreen('register')">Não tem conta? Cadastre-se</p>
+        </div>
+    </div>
+
     <div id="app">
         <nav>
-            <div class="logo"><i class="fa-solid fa-bolt"></i> FinanceFlow</div>
+            <div class="logo"><i class="fa-solid fa-bolt"></i> Minhas Finanças</div>
             <div class="nav-group">
                 <div class="menu-item active" onclick="switchPage('dashboard', event)"><i class="fa-solid fa-house"></i> Dashboard</div>
                 <div class="menu-item" onclick="switchPage('registration', event)"><i class="fa-solid fa-plus-circle"></i> Lançamentos</div>
                 <div class="menu-item" onclick="switchPage('history', event)"><i class="fa-solid fa-list"></i> Histórico</div>
-                <div class="menu-item" onclick="switchPage('settings', event)"><i class="fa-solid fa-palette"></i> Temas</div>
+                <div class="menu-item" onclick="switchPage('settings', event)"><i class="fa-solid fa-gear"></i> Configurações</div>
             </div>
             <div class="nav-group-mobile">
                 <div class="menu-item active" onclick="switchPage('dashboard', event)"><i class="fa-solid fa-house"></i><span>Home</span></div>
                 <div class="menu-item" onclick="switchPage('registration', event)"><i class="fa-solid fa-plus-circle"></i><span>Lançar</span></div>
                 <div class="menu-item" onclick="switchPage('history', event)"><i class="fa-solid fa-list"></i><span>Histórico</span></div>
-                <div class="menu-item" onclick="switchPage('settings', event)"><i class="fa-solid fa-palette"></i><span>Temas</span></div>
+                <div class="menu-item" onclick="switchPage('settings', event)"><i class="fa-solid fa-gear"></i><span>Configs</span></div>
             </div>
         </nav>
 
@@ -211,8 +284,13 @@
                     <h1 id="page-title">Dashboard Financeiro</h1>
                 </div>
                 <div style="text-align: right">
-                    <span style="color: var(--text-muted); font-size: 0.8rem">Usuário:</span><br>
-                    <strong>Alexandre</strong>
+                    <button class="logout-btn" onclick="logout()">
+                        <i class="fa-solid fa-sign-out-alt"></i> Sair
+                    </button>
+                    <div style="margin-top: 5px;">
+                        <span style="color: var(--text-muted); font-size: 0.8rem">Usuário:</span><br>
+                        <strong id="display-username">Alexandre</strong>
+                    </div>
                 </div>
             </div>
 
@@ -264,14 +342,10 @@
 
                 <div class="analytics-section">
                     <div class="graph-selector">
-                        <h3>Análises Disponíveis</h3>
-                        <div class="graph-options-list" id="graphOptions">
-                            <!-- Opções via JS -->
-                        </div>
+                        <h3 style="text-align: center; margin-bottom: 1rem;">Análises Disponíveis</h3>
+                        <div class="graph-options-list" id="graphOptions"></div>
                     </div>
-                    <div class="charts-grid" id="chartsGrid">
-                        <!-- Widgets de gráficos aqui -->
-                    </div>
+                    <div class="charts-grid" id="chartsGrid"></div>
                 </div>
             </section>
 
@@ -314,7 +388,7 @@
                         </div>
                     </div>
                     <button class="btn-primary" id="btn-save" onclick="saveTransaction()">Confirmar Lançamento</button>
-                    <button class="btn-secondary" id="btn-cancel-edit" style="display:none;" onclick="resetForm()">Desistir de Editar</button>
+                    <button class="btn-secondary" id="btn-cancel-edit" style="display:none; width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; margin-top: 10px;" onclick="resetForm()">Desistir de Editar</button>
                 </div>
             </section>
 
@@ -354,10 +428,34 @@
                 </div>
             </section>
 
+            <!-- MÓDULO: CONFIGURAÇÕES -->
             <section id="settings-page" style="display: none;" class="reveal">
-                <h2 style="margin-bottom: 1rem">Personalização</h2>
-                <p style="color: var(--text-muted); margin-bottom: 2rem">Explore a biblioteca de temas: Flat, 3D, Acrylic Glass ou Matte.</p>
-                <div class="themes-grid" id="themes-grid"></div>
+                <div class="settings-tabs">
+                    <button class="tab-btn active" onclick="switchTab('themes', this)">Personalização</button>
+                    <button class="tab-btn" onclick="switchTab('users', this)">Gestão de Contas</button>
+                </div>
+
+                <div id="tab-themes">
+                    <h2 style="margin-bottom: 1rem">Temas do Sistema</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem">Escolha a aparência do seu painel.</p>
+                    <div class="themes-grid" id="themes-grid"></div>
+                </div>
+
+                <div id="tab-users" style="display: none;">
+                    <h2 style="margin-bottom: 1rem">Contas Registradas</h2>
+                    <p style="color: var(--text-muted); margin-bottom: 2rem">Gerencie os usuários cadastrados no sistema.</p>
+                    <table class="user-table">
+                        <thead>
+                            <tr>
+                                <th>Usuário</th>
+                                <th>Ações</th>
+                            </tr>
+                        </thead>
+                        <tbody id="user-list-body">
+                            <!-- Usuários via JS -->
+                        </tbody>
+                    </table>
+                </div>
             </section>
         </main>
     </div>
@@ -372,7 +470,9 @@
     </div>
 
     <script>
-        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        // --- ESTADO GLOBAL ---
+        let currentUser = null;
+        let transactions = [];
         let editingId = null;
         let chartsInstances = {};
 
@@ -396,8 +496,6 @@
             { id: 'cat_radar', label: 'Análise de Perfil (Radar)', type: 'radar', metric: 'category' },
             { id: 'comp_horizontal', label: 'Comparativo Fluxo (Barras H)', type: 'bar', metric: 'comparison', indexAxis: 'y' },
         ];
-
-        let activeGraphs = JSON.parse(localStorage.getItem('activeGraphs')) || ['cat_doughnut'];
 
         const themes = {
             "Default": { bg: "#09090b", card: "#121214", accent: "#6366f1", text: "#fafafa", muted: "#a1a1aa", border: "#27272a", style: 'flat' },
@@ -484,137 +582,188 @@
         };
 
         window.onload = () => {
+            checkAuth();
             document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR', { 
                 weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
             });
             loadTheme();
             renderThemes();
             renderGraphOptions();
-            updateUI();
         };
 
-        function applyTheme(themeName) {
-            const theme = themes[themeName];
-            const root = document.documentElement;
-            root.style.setProperty('--bg-body', theme.bg);
-            root.style.setProperty('--bg-card', theme.card);
-            root.style.setProperty('--accent', theme.accent);
-            root.style.setProperty('--accent-glow', theme.accent + '4D');
-            root.style.setProperty('--text-main', theme.text);
-            root.style.setProperty('--text-muted', theme.muted);
-            root.style.setProperty('--border', theme.border);
+        // --- LÓGICA DE USUÁRIOS E AUTENTICAÇÃO ---
+        function getStoredUsers() {
+            return JSON.parse(localStorage.getItem('appUsers')) || [];
+        }
+
+        function saveUsers(users) {
+            localStorage.setItem('appUsers', JSON.stringify(users));
+        }
+
+        function checkAuth() {
+            const users = getStoredUsers();
+            const loginCard = document.getElementById('auth-login');
+            const registerCard = document.getElementById('auth-register');
+
+            if (users.length === 0) {
+                loginCard.classList.add('hidden');
+                registerCard.classList.remove('hidden');
+            } else {
+                registerCard.classList.add('hidden');
+                loginCard.classList.remove('hidden');
+            }
+        }
+
+        function toggleAuthScreen(screen) {
+            if (screen === 'login') {
+                document.getElementById('auth-login').classList.remove('hidden');
+                document.getElementById('auth-register').classList.add('hidden');
+            } else {
+                document.getElementById('auth-register').classList.remove('hidden');
+                document.getElementById('auth-login').classList.add('hidden');
+            }
+        }
+
+        function registerAccount() {
+            const user = document.getElementById('reg-user').value.trim();
+            const pass = document.getElementById('reg-pass').value;
+            const confirm = document.getElementById('reg-pass-confirm').value;
+            const users = getStoredUsers();
+
+            if (!user || !pass) {
+                showModal({ title: 'Erro', message: 'Preencha todos os campos!', type: 'danger' });
+                return;
+            }
+            if (users.some(u => u.username === user)) {
+                showModal({ title: 'Erro', message: 'Este nome de usuário já existe!', type: 'danger' });
+                return;
+            }
+            if (pass !== confirm) {
+                showModal({ title: 'Erro', message: 'As senhas não coincidem!', type: 'danger' });
+                return;
+            }
+
+            users.push({ username: user, password: pass });
+            saveUsers(users);
+            showModal({ title: 'Sucesso!', message: 'Conta criada com sucesso!', type: 'success', onConfirm: () => toggleAuthScreen('login') });
+        }
+
+        function login() {
+            const user = document.getElementById('login-user').value.trim();
+            const pass = document.getElementById('login-pass').value;
+            const users = getStoredUsers();
+
+            const foundUser = users.find(u => u.username === user && u.password === pass);
+
+            if (foundUser) {
+                currentUser = foundUser.username;
+                document.getElementById('display-username').innerText = currentUser;
+                unlockApp();
+                initUserData();
+                updateUI();
+            } else {
+                showModal({ title: 'Erro', message: 'Usuário ou senha incorretos!', type: 'danger' });
+            }
+        }
+
+        function unlockApp() {
+            const overlay = document.getElementById('auth-overlay');
+            overlay.style.opacity = '0';
+            setTimeout(() => overlay.classList.add('hidden'), 300);
+        }
+
+        function logout() {
+            currentUser = null;
+            const overlay = document.getElementById('auth-overlay');
+            overlay.classList.remove('hidden');
+            overlay.style.opacity = '1';
+            toggleAuthScreen('login');
+        }
+
+        // --- GESTÃO DE DADOS POR USUÁRIO ---
+        function initUserData() {
+            transactions = JSON.parse(localStorage.getItem('transactions_' + currentUser)) || [];
+        }
+
+        function persistTransactions() {
+            localStorage.setItem('transactions_' + currentUser, JSON.stringify(transactions));
+        }
+
+        // --- CONFIGURAÇÕES E GESTÃO DE CONTAS ---
+        function switchTab(tab, btn) {
+            document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
+            btn.classList.add('active');
             
-            document.body.classList.remove('theme-3d', 'theme-glass', 'theme-matte');
-            if (theme.style === '3d') document.body.classList.add('theme-3d');
-            if (theme.style === 'glass') document.body.classList.add('theme-glass');
-            if (theme.style === 'matte') document.body.classList.add('theme-matte');
-
-            localStorage.setItem('selectedTheme', themeName);
-            document.querySelectorAll('.theme-option').forEach(opt => {
-                opt.classList.toggle('active', opt.dataset.theme === themeName);
-            });
-
-            updateAllCharts();
+            document.getElementById('tab-themes').style.display = tab === 'themes' ? 'block' : 'none';
+            document.getElementById('tab-users').style.display = tab === 'users' ? 'block' : 'none';
+            
+            if (tab === 'users') renderUserList();
         }
 
-        function loadTheme() {
-            const saved = localStorage.getItem('selectedTheme') || "Default";
-            applyTheme(saved);
-        }
+        function renderUserList() {
+            const users = getStoredUsers();
+            const body = document.getElementById('user-list-body');
+            body.innerHTML = '';
 
-        function renderThemes() {
-            const grid = document.getElementById('themes-grid');
-            Object.keys(themes).forEach(name => {
-                const theme = themes[name];
-                const div = document.createElement('div');
-                div.className = 'theme-option';
-                div.dataset.theme = name;
-                const label = theme.style === 'glass' ? 'G' : theme.style === '3d' ? '3D' : theme.style === 'matte' ? 'M' : 'F';
-                div.innerHTML = `<div class="theme-preview" style="background:${theme.accent}">${label}</div>${name}`;
-                div.onclick = () => applyTheme(name);
-                grid.appendChild(div);
+            users.forEach(u => {
+                body.innerHTML += `
+                    <tr>
+                        <td>${u.username}</td>
+                        <td>
+                            <button class="btn-action btn-reset" onclick="resetUserPassword('${u.username}')">Resetar Senha</button>
+                            <button class="btn-action btn-delete" onclick="deleteUserAccount('${u.username}')">Excluir</button>
+                        </td>
+                    </tr>
+                `;
             });
         }
 
-        // --- LÓGICA DE WIDGETS DE GRÁFICOS ---
-        function renderGraphOptions() {
-            const list = document.getElementById('graphOptions');
-            graphPresets.forEach(preset => {
-                const btn = document.createElement('button');
-                btn.className = `graph-option-btn ${activeGraphs.includes(preset.id) ? 'active' : ''}`;
-                btn.innerHTML = `<i class="fa-solid fa-chart-simple"></i> ${preset.label}`;
-                btn.onclick = () => toggleGraphWidget(preset.id, btn);
-                list.appendChild(btn);
-            });
-        }
-
-        function toggleGraphWidget(id, btn) {
-            if (activeGraphs.includes(id)) {
-                activeGraphs = activeGraphs.filter(gId => gId !== id);
-                btn.classList.remove('active');
-            } else {
-                if (activeGraphs.length >= 3) {
-                    showModal({ title: 'Limite Atingido', message: 'Você pode adicionar no máximo 3 gráficos ao seu painel.', type: 'danger' });
-                    return;
+        function resetUserPassword(username) {
+            showModal({
+                title: 'Resetar Senha',
+                message: `Digite a nova senha para o usuário ${username}:`,
+                type: 'info',
+                confirmText: 'Salvar',
+                showCancel: true,
+                onConfirm: () => {
+                    const newPass = prompt(`Nova senha para ${username}:`);
+                    if (newPass) {
+                        const users = getStoredUsers();
+                        const userIdx = users.findIndex(u => u.username === username);
+                        users[userIdx].password = newPass;
+                        saveUsers(users);
+                        showModal({ title: 'Sucesso', message: 'Senha alterada com sucesso!', type: 'success' });
+                        renderUserList();
+                    }
                 }
-                activeGraphs.push(id);
-                btn.classList.add('active');
-            }
-            localStorage.setItem('activeGraphs', JSON.stringify(activeGraphs));
-            updateAllCharts();
-        }
-
-        function removeChartWidget(id) {
-            activeGraphs = activeGraphs.filter(gId => gId !== id);
-            localStorage.setItem('activeGraphs', JSON.stringify(activeGraphs));
-            document.querySelectorAll('.graph-option-btn').forEach(btn => {
-                const preset = graphPresets.find(p => p.label.toLowerCase().includes(btn.innerText.toLowerCase().split(' (')[0].toLowerCase()));
-                if (preset && preset.id === id) btn.classList.remove('active');
             });
-            updateAllCharts();
         }
 
-        function showModal({ title, message, type = 'info', confirmText = 'Ok', showCancel = false, onConfirm = null }) {
-            const overlay = document.getElementById('modalOverlay');
-            const icon = document.getElementById('modalIcon');
-            const titleEl = document.getElementById('modalTitle');
-            const msgEl = document.getElementById('modalMsg');
-            const btnsEl = document.getElementById('modalBtns');
-
-            titleEl.innerText = title;
-            msgEl.innerText = message;
-            btnsEl.innerHTML = '';
-
-            if (type === 'success') {
-                icon.innerHTML = '<i class="fa-solid fa-check"></i>';
-                icon.style.backgroundColor = 'var(--success)';
-                icon.style.color = 'white';
-            } else if (type === 'danger') {
-                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
-                icon.style.backgroundColor = 'var(--danger)';
-                icon.style.color = 'white';
-            } else {
-                icon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
-                icon.style.backgroundColor = 'var(--accent)';
-                icon.style.color = 'white';
-            }
-
-            const btnConfirm = document.createElement('button');
-            btnConfirm.className = 'btn-modal btn-confirm';
-            btnConfirm.innerText = confirmText;
-            btnConfirm.onclick = () => { overlay.style.display = 'none'; if (onConfirm) onConfirm(); };
-            btnsEl.appendChild(btnConfirm);
-
-            if (showCancel) {
-                const btnCancel = document.createElement('button');
-                btnCancel.className = 'btn-modal btn-cancel';
-                btnCancel.innerText = 'Cancelar';
-                btnCancel.onclick = () => { overlay.style.display = 'none'; };
-                btnsEl.prepend(btnCancel);
-            }
-            overlay.style.display = 'flex';
+        function deleteUserAccount(username) {
+            showModal({
+                title: 'Confirmar Exclusão',
+                message: `Tem certeza que deseja excluir a conta de ${username}? Isso apagará todos os dados financeiros dele!`,
+                type: 'danger',
+                confirmText: 'Sim, Excluir',
+                showCancel: true,
+                onConfirm: () => {
+                    let users = getStoredUsers();
+                    users = users.filter(u => u.username !== username);
+                    saveUsers(users);
+                    localStorage.removeItem('transactions_' + username);
+                    
+                    if (currentUser === username) {
+                        alert("Sua conta foi excluída. Você será desconectado.");
+                        location.reload();
+                    }
+                    
+                    showModal({ title: 'Excluído', message: 'Conta removida com sucesso.', type: 'success' });
+                    renderUserList();
+                }
+            });
         }
 
+        // --- LÓGICA DE TRANSAÇÕES ---
         function saveTransaction() {
             const desc = document.getElementById('desc').value;
             const amount = document.getElementById('amount').value;
@@ -626,18 +775,16 @@
 
             if (editingId) {
                 const index = transactions.findIndex(t => t.id === editingId);
-                if (index !== -1) {
-                    transactions[index] = { ...transactions[index], desc, amount: parseFloat(amount), type, category, obs };
-                }
+                if (index !== -1) transactions[index] = { ...transactions[index], desc, amount: parseFloat(amount), type, category, obs };
                 editingId = null;
             } else {
                 transactions.push({ id: Date.now(), desc, amount: parseFloat(amount), type, category, obs, date: new Date().toISOString() });
             }
 
-            localStorage.setItem('transactions', JSON.stringify(transactions));
+            persistTransactions();
             resetForm();
             updateUI();
-            showModal({ title: 'Sucesso!', message: 'Lançamento processado com sucesso.', type: 'success', onConfirm: () => switchPage('dashboard', { currentTarget: document.querySelector('.menu-item.active') }) });
+            showModal({ title: 'Sucesso!', message: 'Lançamento processado.', type: 'success', onConfirm: () => switchPage('dashboard', { currentTarget: document.querySelector('.menu-item.active') }) });
         }
 
         function editTransaction(id) {
@@ -671,13 +818,13 @@
                 type: 'danger', confirmText: 'Sim, apagar', showCancel: true,
                 onConfirm: () => {
                     transactions = transactions.filter(t => t.id !== id);
-                    localStorage.setItem('transactions', JSON.stringify(transactions));
+                    persistTransactions();
                     updateUI();
                 }
             });
         }
 
-        // --- LÓGICA DE FILTRAGEM UNIFICADA CORRIGIDA ---
+        // --- FILTROS E UI ---
         function getFilteredTransactions() {
             const dashType = document.getElementById('dash-filter-type').value;
             const dashCat = document.getElementById('dash-filter-cat').value;
@@ -808,15 +955,13 @@
 
         function syncColorsWithTheme(baseColor, count) {
             const colors = [];
-            for (let i = 0; i < count; i++) {
-                colors.push(`hsl(${(i * 40) % 360}, 70%, 60%)`);
-            }
+            for (let i = 0; i < count; i++) colors.push(`hsl(${(i * 40) % 360}, 70%, 60%)`);
             return colors;
         }
 
         function switchPage(page, event) {
             const pages = ['dashboard', 'registration', 'history', 'settings'];
-            const titles = { 'dashboard': 'Dashboard Financeiro', 'registration': 'Lançar Transação', 'history': 'Histórico de Gastos', 'settings': 'Temas e Estilos' };
+            const titles = { 'dashboard': 'Dashboard Financeiro', 'registration': 'Lançar Transação', 'history': 'Histórico de Gastos', 'settings': 'Configurações do Sistema' };
             pages.forEach(p => document.getElementById(`${p}-page`).style.display = 'none');
             document.getElementById(`${page}-page`).style.display = 'block';
             document.getElementById('page-title').innerText = titles[page];
@@ -824,6 +969,130 @@
             if(event && event.currentTarget) event.currentTarget.classList.add('active');
             if (page === 'dashboard') updateAllCharts();
         }
+
+        function showModal({ title, message, type = 'info', confirmText = 'Ok', showCancel = false, onConfirm = null }) {
+            const overlay = document.getElementById('modalOverlay');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const msgEl = document.getElementById('modalMsg');
+            const btnsEl = document.getElementById('modalBtns');
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+            btnsEl.innerHTML = '';
+
+            if (type === 'success') {
+                icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                icon.style.backgroundColor = 'var(--success)';
+                icon.style.color = 'white';
+            } else if (type === 'danger') {
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                icon.style.backgroundColor = 'var(--danger)';
+                icon.style.color = 'white';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+                icon.style.backgroundColor = 'var(--accent)';
+                icon.style.color = 'white';
+            }
+
+            const btnConfirm = document.createElement('button');
+            btnConfirm.className = 'btn-modal btn-confirm';
+            btnConfirm.innerText = confirmText;
+            btnConfirm.onclick = () => { overlay.style.display = 'none'; if (onConfirm) onConfirm(); };
+            btnsEl.appendChild(btnConfirm);
+
+            if (showCancel) {
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'btn-modal btn-cancel';
+                btnCancel.innerText = 'Cancelar';
+                btnCancel.onclick = () => { overlay.style.display = 'none'; };
+                btnsEl.prepend(btnCancel);
+            }
+            overlay.style.display = 'flex';
+        }
+
+        // --- TEMAS ---
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            const root = document.documentElement;
+            root.style.setProperty('--bg-body', theme.bg);
+            root.style.setProperty('--bg-card', theme.card);
+            root.style.setProperty('--accent', theme.accent);
+            root.style.setProperty('--accent-glow', theme.accent + '4D');
+            root.style.setProperty('--text-main', theme.text);
+            root.style.setProperty('--text-muted', theme.muted);
+            root.style.setProperty('--border', theme.border);
+            
+            document.body.classList.remove('theme-3d', 'theme-glass', 'theme-matte');
+            if (theme.style === '3d') document.body.classList.add('theme-3d');
+            if (theme.style === 'glass') document.body.classList.add('theme-glass');
+            if (theme.style === 'matte') document.body.classList.add('theme-matte');
+
+            localStorage.setItem('selectedTheme', themeName);
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.theme === themeName);
+            });
+            updateAllCharts();
+        }
+
+        function loadTheme() {
+            const saved = localStorage.getItem('selectedTheme') || "Default";
+            applyTheme(saved);
+        }
+
+        function renderThemes() {
+            const grid = document.getElementById('themes-grid');
+            Object.keys(themes).forEach(name => {
+                const theme = themes[name];
+                const div = document.createElement('div');
+                div.className = 'theme-option';
+                div.dataset.theme = name;
+                const label = theme.style === 'glass' ? 'G' : theme.style === '3d' ? '3D' : theme.style === 'matte' ? 'M' : 'F';
+                div.innerHTML = `<div class="theme-preview" style="background:${theme.accent}">${label}</div>${name}`;
+                div.onclick = () => applyTheme(name);
+                grid.appendChild(div);
+            });
+        }
+
+        function renderGraphOptions() {
+            const list = document.getElementById('graphOptions');
+            graphPresets.forEach(preset => {
+                const btn = document.createElement('button');
+                btn.className = `graph-option-btn ${activeGraphs.includes(preset.id) ? 'active' : ''}`;
+                btn.innerHTML = `<i class="fa-solid fa-chart-simple"></i> ${preset.label}`;
+                btn.onclick = () => toggleGraphWidget(preset.id, btn);
+                list.appendChild(btn);
+            });
+        }
+
+        function toggleGraphWidget(id, btn) {
+            if (activeGraphs.includes(id)) {
+                activeGraphs = activeGraphs.filter(gId => gId !== id);
+                btn.classList.remove('active');
+            } else {
+                if (activeGraphs.length >= 3) {
+                    showModal({ title: 'Limite Atingido', message: 'Você pode adicionar no máximo 3 gráficos ao seu painel.', type: 'danger' });
+                    return;
+                }
+                activeGraphs.push(id);
+                btn.classList.add('active');
+            }
+            localStorage.setItem('activeGraphs', JSON.stringify(activeGraphs));
+            updateAllCharts();
+        }
+
+        function removeChartWidget(id) {
+            activeGraphs = activeGraphs.filter(gId => gId !== id);
+            localStorage.setItem('activeGraphs', JSON.stringify(activeGraphs));
+            document.querySelectorAll('.graph-option-btn').forEach(btn => {
+                const preset = graphPresets.find(p => p.label.toLowerCase().includes(btn.innerText.toLowerCase().split(' (')[0].toLowerCase()));
+                if (preset && preset.id === id) btn.classList.remove('active');
+            });
+            updateAllCharts();
+        }
+
+        let activeGraphs = JSON.parse(localStorage.getItem('activeGraphs')) || ['cat_doughnut'];
+
     </script>
 </body>
 </html>
