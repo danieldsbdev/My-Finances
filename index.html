@@ -1,0 +1,829 @@
+<!DOCTYPE html>
+<html lang="pt-br">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>FinanceFlow Pro | Filter Master Fixed</title>
+    <link href="https://fonts.googleapis.com/css2?family=Inter:wght@300;400;500;600;700&display=swap" rel="stylesheet">
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+    <script src="https://cdn.jsdelivr.net/npm/chart.js"></script>
+    
+    <style>
+        :root {
+            --bg-body: #09090b;
+            --bg-card: #121214;
+            --accent: #6366f1;
+            --accent-glow: rgba(99, 102, 241, 0.3);
+            --text-main: #fafafa;
+            --text-muted: #a1a1aa;
+            --success: #10b981;
+            --danger: #f43f5e;
+            --border: #27272a;
+            --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
+        }
+
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; overflow-x: hidden; transition: background 0.5s ease; }
+
+        @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
+        @keyframes modalPop { from { opacity: 0; transform: scale(0.9); } to { opacity: 1; transform: scale(1); } }
+        .reveal { animation: slideUp 0.5s ease forwards; }
+
+        /* --- RENDERIZADORES DE ESTILO --- */
+        body.theme-3d .bento-card, body.theme-3d .form-container, body.theme-3d .transactions-container, body.theme-3d .menu-item, body.theme-3d .theme-option, body.theme-3d .chart-widget, body.theme-3d .filter-bar {
+            box-shadow: 6px 6px 12px var(--border), -6px -6px 12px rgba(255,255,255,0.05);
+            border: 1px solid var(--border);
+        }
+        body.theme-3d .btn-primary { box-shadow: 3px 3px 6px var(--border), -3px -3px 6px rgba(255,255,255,0.1); }
+        body.theme-3d .btn-primary:active { box-shadow: inset 3px 3px 6px rgba(0,0,0,0.4); transform: scale(0.98); }
+
+        body.theme-glass .bento-card, body.theme-glass .form-container, body.theme-glass .transactions-container, body.theme-glass .modal-card, body.theme-glass .chart-widget, body.theme-glass .filter-bar {
+            background: var(--bg-card) !important;
+            backdrop-filter: blur(20px) saturate(160%);
+            -webkit-backdrop-filter: blur(20px) saturate(160%);
+            border: 1px solid rgba(255, 255, 255, 0.15) !important;
+            box-shadow: inset 1px 1px 2px rgba(255, 255, 255, 0.2), 0 10px 30px rgba(0, 0, 0, 0.4);
+        }
+        body.theme-glass .menu-item.active { background: rgba(99, 102, 241, 0.4) !important; backdrop-filter: blur(5px); }
+
+        body.theme-matte .bento-card, body.theme-matte .form-container, body.theme-matte .transactions-container, body.theme-matte .chart-widget, body.theme-matte .filter-bar {
+            box-shadow: none !important;
+            border: 2px solid var(--border) !important;
+            background: var(--bg-card) !important;
+        }
+        body.theme-matte .btn-primary { box-shadow: none !important; background: var(--accent) !important; filter: saturate(0.8); }
+        body.theme-matte .balance-card { background: var(--bg-card) !important; border: 2px solid var(--accent); }
+
+        #app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
+
+        /* Sidebar */
+        nav { background: var(--bg-card); border-right: 1px solid var(--border); padding: 2rem 1.5rem; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; transition: var(--transition); }
+        .logo { font-size: 1.2rem; font-weight: 700; margin-bottom: 3rem; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
+        .logo i { color: var(--accent); font-size: 1.5rem; }
+        .nav-group { display: flex; flex-direction: column; gap: 0.5rem; }
+        .menu-item { padding: 12px 16px; color: var(--text-muted); text-decoration: none; border-radius: 10px; display: flex; align-items: center; gap: 12px; transition: var(--transition); cursor: pointer; font-weight: 500; font-size: 0.9rem; }
+        .menu-item:hover { color: var(--text-main); background: rgba(255,255,255,0.05); }
+        .menu-item.active { background: var(--accent); color: white; box-shadow: 0 0 20px var(--accent-glow); }
+
+        main { padding: 3rem; max-width: 1400px; margin: 0 auto; width: 100%; }
+        .header { margin-bottom: 3rem; display: flex; justify-content: space-between; align-items: flex-end; }
+        .header h1 { font-size: 2rem; font-weight: 700; letter-spacing: -1px; }
+        .header p { color: var(--text-muted); font-size: 0.9rem; }
+
+        /* FILTER BAR */
+        .filter-bar { 
+            display: flex; gap: 1rem; align-items: center; background: var(--bg-card); 
+            border: 1px solid var(--border); padding: 1rem; border-radius: 16px; margin-bottom: 2rem;
+            transition: var(--transition);
+        }
+        .filter-group { display: flex; align-items: center; gap: 10px; }
+        .filter-group label { font-size: 0.75rem; color: var(--text-muted); white-space: nowrap; }
+        .filter-group select, .filter-group input { 
+            background: #1a1a1c; border: 1px solid var(--border); color: white; 
+            padding: 8px 12px; border-radius: 10px; outline: none; font-size: 0.8rem;
+        }
+
+        /* BENTO */
+        .bento-grid { display: grid; grid-template-columns: repeat(3, 1fr); gap: 1.5rem; margin-bottom: 3rem; }
+        .bento-card { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; transition: var(--transition); }
+        .bento-card:hover { border-color: var(--accent); transform: translateY(-5px); }
+        .card-title { color: var(--text-muted); font-size: 0.8rem; font-weight: 500; margin-bottom: 1rem; display: block; }
+        .card-value { font-size: 2rem; font-weight: 700; letter-spacing: -1px; }
+        .balance-card { background: linear-gradient(135deg, var(--accent) 0%, var(--bg-card) 100%); border-color: var(--accent); }
+
+        /* ANALYTICS SECTION */
+        .analytics-section { display: grid; grid-template-columns: 300px 1fr; gap: 2rem; margin-bottom: 3rem; }
+        .graph-selector { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; height: fit-content; }
+        .graph-selector h3 { font-size: 1rem; margin-bottom: 1.5rem; text-align: center; }
+        .graph-options-list { display: flex; flex-direction: column; gap: 8px; max-height: 600px; overflow-y: auto; padding-right: 5px; }
+        .graph-option-btn { 
+            background: #1a1a1c; border: 1px solid var(--border); color: var(--text-muted); 
+            padding: 10px 15px; border-radius: 12px; cursor: pointer; text-align: left; 
+            font-size: 0.8rem; transition: var(--transition); display: flex; align-items: center; gap: 10px;
+        }
+        .graph-option-btn:hover { background: #27272a; color: var(--text-main); }
+        .graph-option-btn.active { background: var(--accent); color: white; border-color: var(--accent); }
+
+        .charts-grid { 
+            display: grid; 
+            grid-template-columns: repeat(auto-fit, minmax(400px, 1fr)); 
+            gap: 1.5rem; 
+            align-content: start;
+        }
+        .chart-widget { 
+            background: var(--bg-card); border: 1px solid var(--border); 
+            border-radius: 24px; padding: 1.5rem; transition: var(--transition); 
+            position: relative; min-height: 400px; display: flex; flex-direction: column;
+        }
+        .chart-widget-header { 
+            display: flex; justify-content: space-between; align-items: center; 
+            margin-bottom: 1rem; padding: 0 10px;
+        }
+        .chart-widget-header h4 { font-size: 0.9rem; color: var(--text-main); font-weight: 500; }
+        .remove-chart-btn { 
+            background: transparent; border: none; color: var(--text-muted); 
+            cursor: pointer; transition: var(--transition); font-size: 0.9rem; 
+        }
+        .remove-chart-btn:hover { color: var(--danger); }
+
+        /* FORM */
+        .form-container { max-width: 600px; margin: 0 auto; background: var(--bg-card); border: 1px solid var(--border); padding: 2.5rem; border-radius: 24px; }
+        .input-grid { display: grid; grid-template-columns: 1fr 1fr; gap: 1.5rem; }
+        .full-width { grid-column: span 2; }
+        .input-field { margin-bottom: 1.2rem; }
+        .input-field label { display: block; font-size: 0.75rem; color: var(--text-muted); margin-bottom: 6px; margin-left: 4px; }
+        .input-field input, .input-field select, .input-field textarea { width: 100%; padding: 12px 16px; background: #1a1a1c; border: 1px solid var(--border); border-//Cálculo simplificado corrected
+        border-radius: 12px; color: white; outline: none; transition: var(--transition); }
+        .input-field input:focus, .input-field select:focus, .input-field textarea:focus { border-color: var(--accent); box-shadow: 0 0 0 3px var(--accent-glow); }
+        .btn-primary { width: 100%; padding: 14px; background: var(--accent); color: white; border: none; border-radius: 12px; font-weight: 600; cursor: pointer; transition: var(--transition); margin-top: 1rem; }
+        .btn-primary:hover { filter: brightness(1.2); transform: scale(1.02); }
+        .btn-secondary { width: 100%; padding: 12px; background: transparent; color: var(--text-muted); border: 1px solid var(--border); border-radius: 12px; cursor: pointer; transition: var(--transition); margin-top: 10px; font-weight: 500; }
+        .btn-secondary:hover { color: var(--text-main); border-color: var(--text-muted); }
+
+        /* LIST */
+        .transactions-container { background: var(--bg-card); border: 1px solid var(--border); border-radius: 24px; padding: 1.5rem; }
+        .transaction-item { display: flex; justify-content: space-between; align-items: center; padding: 15px; border-radius: 16px; transition: var(--transition); border-bottom: 1px solid #1a1a1c; }
+        .transaction-item:hover { background: #1a1a1c; }
+        .item-info { display: flex; align-items: center; gap: 12px; }
+        .item-icon { width: 40px; height: 40px; background: #1a1a1c; border-radius: 10px; display: flex; align-items: center; justify-content: center; color: var(--text-muted); }
+        .amount-pos { color: var(--success); font-weight: 600; }
+        .amount-neg { color: var(--danger); font-weight: 600; }
+
+        /* THEMES GRID */
+        .themes-grid { display: grid; grid-template-columns: repeat(auto-fill, minmax(130px, 1fr)); gap: 1rem; margin-top: 2rem; }
+        .theme-option { background: var(--bg-card); border: 1px solid var(--border); padding: 1rem; border-radius: 16px; cursor: pointer; transition: var(--transition); text-align: center; font-size: 0.75rem; }
+        .theme-option:hover { border-color: var(--accent); transform: scale(1.05); }
+        .theme-option.active { border-color: var(--accent); box-shadow: 0 0 10px var(--accent-glow); }
+        .theme-preview { width: 30px; height: 30px; border-radius: 50%; margin: 0 auto 10px; display: flex; align-items: center; justify-content: center; font-size: 0.6rem; font-weight: bold; color: white; }
+
+        /* MODAL */
+        .modal-overlay { position: fixed; top: 0; left: 0; width: 100%; height: 100%; background: rgba(0, 0, 0, 0.8); backdrop-filter: blur(8px); display: none; justify-content: center; align-items: center; z-index: 2000; padding: 20px; }
+        .modal-card { background: var(--bg-card); border: 1px solid var(--border); width: 100%; max-width: 400px; border-radius: 24px; padding: 2rem; text-align: center; animation: modalPop 0.3s cubic-bezier(0.175, 0.885, 0.32, 1.275); }
+        .modal-icon { width: 60px; height: 60px; border-radius: 50%; display: flex; align-items: center; justify-content: center; margin: 0 auto 1.5rem; font-size: 1.5rem; }
+        .modal-title { font-size: 1.3rem; font-weight: 600; margin-bottom: 1rem; }
+        .modal-msg { color: var(--text-muted); font-size: 0.9rem; margin-bottom: 2rem; line-height: 1.5; }
+        .modal-btns { display: flex; gap: 1rem; justify-content: center; }
+        .btn-modal { padding: 12px 24px; border-radius: 12px; border: none; font-weight: 600; cursor: pointer; transition: var(--transition); flex: 1; }
+        .btn-confirm { background: var(--accent); color: white; }
+        .btn-cancel { background: #27272a; color: var(--text-main); }
+
+        @media (max-width: 1024px) {
+            #app { grid-template-columns: 1fr; }
+            nav { position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); width: 90%; max-width: 400px; height: auto; flex-direction: row; justify-content: space-around; padding: 10px; border: 1px solid var(--border); border-radius: 25px; z-index: 1000; }
+            .logo, .nav-group { display: none; }
+            .nav-group-mobile { display: flex; width: 100%; justify-content: space-around; }
+            .menu-item { flex-direction: column; gap: 4px; font-size: 0.6rem; padding: 10px; }
+            main { padding: 1.5rem; padding-bottom: 100px; }
+            .bento-grid { grid-template-columns: 1fr; }
+            .analytics-section { grid-template-columns: 1fr; }
+            .charts-grid { grid-template-columns: 1fr; }
+            .input-grid { grid-template-columns: 1fr; }
+            .full-width { grid-column: span 1; }
+            .filter-bar { flex-direction: column; align-items: stretch; gap: 1rem; }
+        }
+        .nav-group-mobile { display: none; }
+        @media (max-width: 1024px) { .nav-group-mobile { display: flex; } }
+    </style>
+</head>
+<body id="body">
+
+    <div id="app">
+        <nav>
+            <div class="logo"><i class="fa-solid fa-bolt"></i> FinanceFlow</div>
+            <div class="nav-group">
+                <div class="menu-item active" onclick="switchPage('dashboard', event)"><i class="fa-solid fa-house"></i> Dashboard</div>
+                <div class="menu-item" onclick="switchPage('registration', event)"><i class="fa-solid fa-plus-circle"></i> Lançamentos</div>
+                <div class="menu-item" onclick="switchPage('history', event)"><i class="fa-solid fa-list"></i> Histórico</div>
+                <div class="menu-item" onclick="switchPage('settings', event)"><i class="fa-solid fa-palette"></i> Temas</div>
+            </div>
+            <div class="nav-group-mobile">
+                <div class="menu-item active" onclick="switchPage('dashboard', event)"><i class="fa-solid fa-house"></i><span>Home</span></div>
+                <div class="menu-item" onclick="switchPage('registration', event)"><i class="fa-solid fa-plus-circle"></i><span>Lançar</span></div>
+                <div class="menu-item" onclick="switchPage('history', event)"><i class="fa-solid fa-list"></i><span>Histórico</span></div>
+                <div class="menu-item" onclick="switchPage('settings', event)"><i class="fa-solid fa-palette"></i><span>Temas</span></div>
+            </div>
+        </nav>
+
+        <main>
+            <div class="header reveal">
+                <div>
+                    <p id="current-date"></p>
+                    <h1 id="page-title">Dashboard Financeiro</h1>
+                </div>
+                <div style="text-align: right">
+                    <span style="color: var(--text-muted); font-size: 0.8rem">Usuário:</span><br>
+                    <strong>Alexandre</strong>
+                </div>
+            </div>
+
+            <!-- MÓDULO: DASHBOARD -->
+            <section id="dashboard-page" class="reveal">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Tipo:</label>
+                        <select id="dash-filter-type" onchange="updateUI()">
+                            <option value="all">Tudo</option>
+                            <option value="income">Receitas</option>
+                            <option value="expense">Despesas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Categoria:</label>
+                        <select id="dash-filter-cat" onchange="updateUI()">
+                            <option value="all">Todas</option>
+                            <option value="Uber">Uber</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Mercado">Mercado</option>
+                            <option value="Lazer">Lazer</option>
+                            <option value="Farmácia">Farmácia</option>
+                            <option value="Internet">Internet</option>
+                            <option value="Faculdade">Faculdade</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Data:</label>
+                        <input type="date" id="dash-filter-date" onchange="updateUI()">
+                    </div>
+                </div>
+
+                <div class="bento-grid">
+                    <div class="bento-card balance-card">
+                        <span class="card-title">Saldo Filtrado</span>
+                        <div class="card-value" id="month-balance">R$ 0,00</div>
+                    </div>
+                    <div class="bento-card">
+                        <span class="card-title">Receitas Filtradas</span>
+                        <div class="card-value amount-pos" id="month-income">R$ 0,00</div>
+                    </div>
+                    <div class="bento-card">
+                        <span class="card-title">Despesas Filtradas</span>
+                        <div class="card-value amount-neg" id="month-expense">R$ 0,00</div>
+                    </div>
+                </div>
+
+                <div class="analytics-section">
+                    <div class="graph-selector">
+                        <h3>Análises Disponíveis</h3>
+                        <div class="graph-options-list" id="graphOptions">
+                            <!-- Opções via JS -->
+                        </div>
+                    </div>
+                    <div class="charts-grid" id="chartsGrid">
+                        <!-- Widgets de gráficos aqui -->
+                    </div>
+                </div>
+            </section>
+
+            <!-- MÓDULO: CADASTRO -->
+            <section id="registration-page" style="display: none;" class="reveal">
+                <div class="form-container">
+                    <h3 id="form-title" style="margin-bottom: 2rem; text-align: center;">Novo Lançamento</h3>
+                    <div class="input-grid">
+                        <div class="input-field full-width">
+                            <label>Tipo de Lançamento</label>
+                            <select id="type">
+                                <option value="income">Receita (+)</option>
+                                <option value="expense">Despesa (-)</option>
+                            </select>
+                        </div>
+                        <div class="input-field full-width">
+                            <label>Descrição</label>
+                            <input type="text" id="desc" placeholder="Ex: Pagamento Salário...">
+                        </div>
+                        <div class="input-field">
+                            <label>Valor (R$)</label>
+                            <input type="number" id="amount" placeholder="0,00">
+                        </div>
+                        <div class="input-field">
+                            <label>Categoria</label>
+                            <select id="category">
+                                <option value="Outros">Outros</option>
+                                <option value="Uber">Uber</option>
+                                <option value="Transporte">Transporte</option>
+                                <option value="Mercado">Mercado</option>
+                                <option value="Lazer">Lazer</option>
+                                <option value="Farmácia">Farmácia</option>
+                                <option value="Internet">Internet</option>
+                                <option value="Faculdade">Faculdade</option>
+                            </select>
+                        </div>
+                        <div class="input-field full-width">
+                            <label>Observações</label>
+                            <textarea id="obs" rows="3" placeholder="Detalhes..."></textarea>
+                        </div>
+                    </div>
+                    <button class="btn-primary" id="btn-save" onclick="saveTransaction()">Confirmar Lançamento</button>
+                    <button class="btn-secondary" id="btn-cancel-edit" style="display:none;" onclick="resetForm()">Desistir de Editar</button>
+                </div>
+            </section>
+
+            <!-- MÓDULO: HISTÓRICO -->
+            <section id="history-page" style="display: none;" class="reveal">
+                <div class="filter-bar">
+                    <div class="filter-group">
+                        <label>Tipo:</label>
+                        <select id="hist-filter-type" onchange="updateUI()">
+                            <option value="all">Tudo</option>
+                            <option value="income">Receitas</option>
+                            <option value="expense">Despesas</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Categoria:</label>
+                        <select id="hist-filter-cat" onchange="updateUI()">
+                            <option value="all">Todas</option>
+                            <option value="Uber">Uber</option>
+                            <option value="Transporte">Transporte</option>
+                            <option value="Mercado">Mercado</option>
+                            <option value="Lazer">Lazer</option>
+                            <option value="Farmácia">Farmácia</option>
+                            <option value="Internet">Internet</option>
+                            <option value="Faculdade">Faculdade</option>
+                            <option value="Outros">Outros</option>
+                        </select>
+                    </div>
+                    <div class="filter-group">
+                        <label>Data:</label>
+                        <input type="date" id="hist-filter-date" onchange="updateUI()">
+                    </div>
+                </div>
+
+                <div class="transactions-container">
+                    <div id="list-container"></div>
+                </div>
+            </section>
+
+            <section id="settings-page" style="display: none;" class="reveal">
+                <h2 style="margin-bottom: 1rem">Personalização</h2>
+                <p style="color: var(--text-muted); margin-bottom: 2rem">Explore a biblioteca de temas: Flat, 3D, Acrylic Glass ou Matte.</p>
+                <div class="themes-grid" id="themes-grid"></div>
+            </section>
+        </main>
+    </div>
+
+    <div class="modal-overlay" id="modalOverlay">
+        <div class="modal-card">
+            <div class="modal-icon" id="modalIcon"></div>
+            <div class="modal-title" id="modalTitle">Título</div>
+            <div class="modal-msg" id="modalMsg">Mensagem.</div>
+            <div class="modal-btns" id="modalBtns"></div>
+        </div>
+    </div>
+
+    <script>
+        let transactions = JSON.parse(localStorage.getItem('transactions')) || [];
+        let editingId = null;
+        let chartsInstances = {};
+
+        const graphPresets = [
+            { id: 'cat_pie', label: 'Gastos por Categoria (Pizza)', type: 'pie', metric: 'category' },
+            { id: 'cat_doughnut', label: 'Gastos por Categoria (Rosca)', type: 'doughnut', metric: 'category' },
+            { id: 'cat_polar', label: 'Gastos por Categoria (Polar)', type: 'polarArea', metric: 'category' },
+            { id: 'cat_bar_v', label: 'Gastos por Categoria (Barras V)', type: 'bar', metric: 'category', indexAxis: 'x' },
+            { id: 'cat_bar_h', label: 'Gastos por Categoria (Barras H)', type: 'bar', metric: 'category', indexAxis: 'y' },
+            { id: 'comp_bar', label: 'Receita vs Despesa (Barras)', type: 'bar', metric: 'comparison' },
+            { id: 'comp_line', label: 'Receita vs Despesa (Linhas)', type: 'line', metric: 'comparison' },
+            { id: 'comp_radar', label: 'Receita vs Despesa (Radar)', type: 'radar', metric: 'comparison' },
+            { id: 'comp_doughnut', label: 'Proporção Receita/Gasto (Rosca)', type: 'doughnut', metric: 'comparison' },
+            { id: 'comp_pie', label: 'Proporção Receita/Gasto (Pizza)', type: 'pie', metric: 'comparison' },
+            { id: 'trend_line', label: 'Tendência de Gastos (Linha)', type: 'line', metric: 'trend' },
+            { id: 'trend_bar', label: 'Tendência de Gastos (Barras)', type: 'bar', metric: 'trend' },
+            { id: 'trend_area', label: 'Volume de Gastos (Área)', type: 'line', metric: 'trend', fill: true },
+            { id: 'ratio_polar', label: 'Distribuição de Valor (Polar)', type: 'polarArea', metric: 'comparison' },
+            { id: 'cat_bubble', label: 'Densidade de Gastos (Bolhas)', type: 'bubble', metric: 'category' },
+            { id: 'comp_step', label: 'Evolução de Saldo (Step)', type: 'line', metric: 'trend', stepped: true },
+            { id: 'cat_radar', label: 'Análise de Perfil (Radar)', type: 'radar', metric: 'category' },
+            { id: 'comp_horizontal', label: 'Comparativo Fluxo (Barras H)', type: 'bar', metric: 'comparison', indexAxis: 'y' },
+        ];
+
+        let activeGraphs = JSON.parse(localStorage.getItem('activeGraphs')) || ['cat_doughnut'];
+
+        const themes = {
+            "Default": { bg: "#09090b", card: "#121214", accent: "#6366f1", text: "#fafafa", muted: "#a1a1aa", border: "#27272a", style: 'flat' },
+            "Midnight": { bg: "#020617", card: "#0f172a", accent: "#38bdf8", text: "#f8fafc", muted: "#94a3b8", border: "#1e293b", style: 'flat' },
+            "Forest": { bg: "#052e16", card: "#064e3b", accent: "#4ade80", text: "#f0fdf4", muted: "#a7f3d0", border: "#065f46", style: 'flat' },
+            "Crimson": { bg: "#1a0505", card: "#2d0a0a", accent: "#f43f5e", text: "#fff1f2", muted: "#fda4af", border: "#4c0505", style: 'flat' },
+            "Amethyst": { bg: "#1e1b4b", card: "#312e81", accent: "#c084fc", text: "#f5f3ff", muted: "#ddd6fe", border: "#4338ca", style: 'flat' },
+            "Ocean": { bg: "#0c4a6e", card: "#075985", accent: "#38bdf8", text: "#f0f9ff", muted: "#bae6fd", border: "#0369a1", style: 'flat' },
+            "Amber": { bg: "#451a03", card: "#78350f", accent: "#fbbf24", text: "#fffbeb", muted: "#fde68a", border: "#92400e", style: 'flat' },
+            "Slate": { bg: "#0f172a", card: "#1e293b", accent: "#94a3b8", text: "#f1f5f9", muted: "#64748b", border: "#334155", style: 'flat' },
+            "Neon": { bg: "#000000", card: "#0a0a0a", accent: "#00ff41", text: "#ffffff", muted: "#008f11", border: "#003b00", style: 'flat' },
+            "Pastel Blue": { bg: "#e0f2fe", card: "#bae6fd", accent: "#0ea5e9", text: "#0c4a6e", muted: "#0369a1", border: "#7dd3fc", style: 'flat' },
+            "Pastel Pink": { bg: "#fdf2f8", card: "#fbcfe8", accent: "#db2777", text: "#831843", muted: "#be1846", border: "#f9a8d4", style: 'flat' },
+            "Dark Gold": { bg: "#1a1a1a", card: "#262626", accent: "#d4af37", text: "#e5e5e5", muted: "#a3a3a3", border: "#333333", style: 'flat' },
+            "Cyberpunk": { bg: "#2b0035", card: "#4a0055", accent: "#ff00ff", text: "#00ffff", muted: "#bc00bc", border: "#6b0082", style: 'flat' },
+            "Nord": { bg: "#2e3440", card: "#3b4252", accent: "#88c0d0", text: "#eceff4", muted: "#d8dee9", border: "#434c5e", style: 'flat' },
+            "Dracula": { bg: "#282a36", card: "#44475a", accent: "#bd93f9", text: "#f8f8f2", muted: "#6272a4", border: "#44475a", style: 'flat' },
+            "Solarized": { bg: "#002b36", card: "#073642", accent: "#268bd2", text: "#839496", muted: "#586e75", border: "#073642", style: 'flat' },
+            "Coffee": { bg: "#2c1810", card: "#3d2b1f", accent: "#c68642", text: "#ede0d4", muted: "#a98467", border: "#432818", style: 'flat' },
+            "Minimal Light": { bg: "#ffffff", card: "#f5f5f5", accent: "#000000", text: "#000000", muted: "#666666", border: "#dddddd", style: 'flat' },
+            "Deep Purple": { bg: "#120024", card: "#24004d", accent: "#bc13fe", text: "#f3e5f5", muted: "#9c27b0", border: "#3d007a", style: 'flat' },
+            "Emerald": { bg: "#064e3b", card: "#065f46", accent: "#34d399", text: "#ecfdf5", muted: "#a7f3d0", border: "#064e3b", style: 'flat' },
+            "Sunset": { bg: "#4c0519", card: "#881337", accent: "#fb7185", text: "#fff1f2", muted: "#fda4af", border: "#9f1239", style: 'flat' },
+            "Space": { bg: "#000000", card: "#111111", accent: "#ffffff", text: "#ffffff", muted: "#555555", border: "#222222", style: 'flat' },
+            "Lime": { bg: "#1a2e05", card: "#2d4a0a", accent: "#bef264", text: "#f7fee7", muted: "#a3e635", border: "#365300", style: 'flat' },
+            "Lavender": { bg: "#2e1065", card: "#4c1d95", accent: "#ddd6fe", text: "#f5f3ff", muted: "#c4b5fd", border: "#5b21b6", style: 'flat' },
+            "Olive": { bg: "#1c1917", card: "#292524", accent: "#a8a29e", text: "#fafaf9", muted: "#78716c", border: "#44403c", style: 'flat' },
+            "Ruby": { bg: "#450a0a", card: "#7f1d1d", accent: "#f87171", text: "#fef2f2", muted: "#fca5a5", border: "#991b1b", style: 'flat' },
+            "Steel": { bg: "#171717", card: "#262626", accent: "#71717a", text: "#fafafa", muted: "#a1a1aa", border: "#3f3f46", style: 'flat' },
+            "Aqua": { bg: "#083344", card: "#164e63", accent: "#22d3ee", text: "#ecfeff", muted: "#a5f3fc", border: "#155e75", style: 'flat' },
+            "Mint": { bg: "#064e3b", card: "#065f46", accent: "#6ee7b7", text: "#f0fdf4", muted: "#a7f3d0", border: "#065f46", style: 'flat' },
+            "Sand": { bg: "#fefce8", card: "#fef9c3", accent: "#ca8a04", text: "#713f12", muted: "#a16207", border: "#fde047", style: 'flat' },
+            "Night": { bg: "#020617", card: "#0f172a", accent: "#6366f1", text: "#f8fafc", muted: "#94a3b8", border: "#1e293b", style: 'flat' },
+            "Space 3D": { bg: "#1a1a1a", card: "#242424", accent: "#38bdf8", text: "#eee", muted: "#888", border: "#000", style: '3d' },
+            "Gold Luxe 3D": { bg: "#1c1917", card: "#292524", accent: "#d4af37", text: "#fefce8", muted: "#a16207", border: "#44403c", style: '3d' },
+            "Neon Depth 3D": { bg: "#000000", card: "#0a0a0a", accent: "#ff00ff", text: "#fff", muted: "#555", border: "#111", style: '3d' },
+            "Oceanic 3D": { bg: "#e0f2fe", card: "#bae6fd", accent: "#0284c7", text: "#0c4a6e", muted: "#0369a1", border: "#7dd3fc", style: '3d' },
+            "Obsidian 3D": { bg: "#050505", card: "#121212", accent: "#ffffff", text: "#fff", muted: "#666", border: "#000", style: '3d' },
+            "Cloud 3D": { bg: "#e0e5ec", card: "#e0e5ec", accent: "#6366f1", text: "#444", muted: "#777", border: "#b8bcc2", style: '3d' },
+            "Mint Glass 3D": { bg: "#e8f5e9", card: "#c8e6c9", accent: "#2e7d32", text: "#1b5e20", muted: "#4caf50", border: "#a5d6a7", style: '3d' },
+            "Ruby 3D": { bg: "#fef2f2", card: "#fee2e2", accent: "#dc2626", text: "#7f1d1d", muted: "#f87171", border: "#fecaca", style: '3d' },
+            "Titanium 3D": { bg: "#d1d5db", card: "#9ca3af", accent: "#374151", text: "#111827", muted: "#4b5563", border: "#6b7280", style: '3d' },
+            "Candy 3D": { bg: "#fdf2f8", card: "#fbcfe8", accent: "#db2777", text: "#831843", muted: "#be1846", border: "#f9a8d4", style: '3d' },
+            "Aurora Glass": { bg: "#1e1b4b", card: "rgba(30,30,50,0.5)", accent: "#a855f7", text: "#fff", muted: "#c4b5fd", border: "#4338ca", style: 'glass' },
+            "Sapphire Glass": { bg: "#0c4a6e", card: "rgba(12,74,110,0.5)", accent: "#38bdf8", text: "#fff", muted: "#bae6fd", border: "#075985", style: 'glass' },
+            "Emerald Glass": { bg: "#064e3b", card: "rgba(6,78,59,0.5)", accent: "#34d399", text: "#fff", muted: "#a7f3d0", border: "#065f46", style: 'glass' },
+            "Ruby Glass": { bg: "#4c0519", card: "rgba(76,5,25,0.5)", accent: "#fb7185", text: "#fff", muted: "#fda4af", border: "#9f1239", style: 'glass' },
+            "Amethyst Glass": { bg: "#2e1065", card: "rgba(46,16,101,0.5)", accent: "#c084fc", text: "#fff", muted: "#ddd6fe", border: "#5b21b6", style: 'glass' },
+            "Opal Glass": { bg: "#fdf2f8", card: "rgba(253,242,248,0.5)", accent: "#ec4899", text: "#831843", muted: "#be1846", border: "#f9a8d4", style: 'glass' },
+            "Frosty Mint": { bg: "#f0fdf4", card: "rgba(240,253,244,0.5)", accent: "#22c55e", text: "#14532d", muted: "#86efac", border: "#bbf7d0", style: 'glass' },
+            "Deep Sea Glass": { bg: "#083344", card: "rgba(8,51,68,0.5)", accent: "#22d3ee", text: "#fff", muted: "#a5f3fc", border: "#155e75", style: 'glass' },
+            "Cyber Glass": { bg: "#000000", card: "rgba(20,20,20,0.5)", accent: "#00ff41", text: "#fff", muted: "#008f11", border: "#003b00", style: 'glass' },
+            "Sunset Glass": { bg: "#450a0a", card: "rgba(69,10,10,0.5)", accent: "#fbbf24", text: "#fff", muted: "#fde68a", border: "#7f1d1d", style: 'glass' },
+            "Velvet Glass": { bg: "#1e1b4b", card: "rgba(30,27,75,0.5)", accent: "#f43f5e", text: "#fff", muted: "#fda4af", border: "#312e81", style: 'glass' },
+            "Pearl Glass": { bg: "#fafaf9", card: "rgba(250,250,249,0.5)", accent: "#a8a29e", text: "#444", muted: "#78716c", border: "#d6d3d1", style: 'glass' },
+            "Prism Glass": { bg: "#1e1b4b", card: "rgba(30,27,75,0.5)", accent: "#fbbf24", text: "#fff", muted: "#fde68a", border: "#4338ca", style: 'glass' },
+            "Solar Glass": { bg: "#fefce8", card: "rgba(254,252,232,0.5)", accent: "#ca8a04", text: "#713f12", muted: "#a16207", border: "#fde047", style: 'glass' },
+            "Lunar Glass": { bg: "#0f172a", card: "rgba(15,23,42,0.5)", accent: "#e2e8f0", text: "#fff", muted: "#94a3b8", border: "#1e293b", style: 'glass' },
+            "Quartz Glass": { bg: "#fdf2f8", card: "rgba(253,242,248,0.5)", accent: "#db2777", text: "#831843", muted: "#be1846", border: "#f9a8d4", style: 'glass' },
+            "Neon Glass": { bg: "#000", card: "rgba(10,10,10,0.5)", accent: "#ff00ff", text: "#fff", muted: "#bc00bc", border: "#6b0082", style: 'glass' },
+            "Aqua Glass": { bg: "#083344", card: "rgba(8,51,68,0.5)", accent: "#22d3ee", text: "#fff", muted: "#a5f3fc", border: "#155e75", style: 'glass' },
+            "Minty Glass": { bg: "#ecfdf5", card: "rgba(236,253,245,0.5)", accent: "#10b981", text: "#064e3b", muted: "#a7f3d0", border: "#bbf7d0", style: 'glass' },
+            "Cosmic Glass": { bg: "#1e1b4b", card: "rgba(30,27,75,0.5)", accent: "#c084fc", text: "#fff", muted: "#ddd6fe", border: "#4338ca", style: 'glass' },
+            "Industrial Grey": { bg: "#27272a", card: "#3f3f46", accent: "#a1a1aa", text: "#fafafa", muted: "#71717a", border: "#18181b", style: 'matte' },
+            "Midnight Matte": { bg: "#0f172a", card: "#1e293b", accent: "#38bdf8", text: "#f1f5f9", muted: "#64748b", border: "#020617", style: 'matte' },
+            "Sand Matte": { bg: "#d6d3d1", card: "#a8a29e", accent: "#78716c", text: "#444", muted: "#57534e", border: "#78716c", style: 'matte' },
+            "Forest Matte": { bg: "#064e3b", card: "#065f46", accent: "#34d399", text: "#ecfdf5", muted: "#a7f3d0", border: "#064e3b", style: 'matte' },
+            "Navy Matte": { bg: "#1e3a8a", card: "#1e40af", accent: "#93c5fd", text: "#eff6ff", muted: "#bfdbfe", border: "#172554", style: 'matte' },
+            "Pure Crystal": { bg: "#f8fafc", card: "rgba(255,255,255,0.3)", accent: "#6366f1", text: "#1e293b", muted: "#64748b", border: "rgba(255,255,255,0.5)", style: 'glass' },
+            "Deep Void Glass": { bg: "#020617", card: "rgba(2,6,23,0.4)", accent: "#818cf8", text: "#f8fafc", muted: "#94a3b8", border: "rgba(255,255,255,0.1)", style: 'glass' },
+            "Holographic Ice": { bg: "#e0f2fe", card: "rgba(255,255,255,0.4)", accent: "#06b6d4", text: "#0c4a6e", muted: "#0369a1", border: "rgba(255,255,255,0.6)", style: 'glass' },
+            "Neon Ghost": { bg: "#000", card: "rgba(255,255,255,0.05)", accent: "#22c55e", text: "#fff", muted: "#4ade80", border: "rgba(34,197,94,0.3)", style: 'glass' },
+            "Frosted Rose": { bg: "#fff1f2", card: "rgba(255,255,255,0.5)", accent: "#fb7185", text: "#881337", muted: "#f43f5e", border: "rgba(255,255,255,0.7)", style: 'glass' },
+            "Nebula Glass": { bg: "#2e1065", card: "rgba(46,16,101,0.3)", accent: "#c084fc", text: "#fff", muted: "#ddd6fe", border: "rgba(192,132,252,0.4)", style: 'glass' },
+            "Airy Blue": { bg: "#f0f9ff", card: "rgba(255,255,255,0.6)", accent: "#0ea5e9", text: "#0c4a6e", muted: "#38bdf8", border: "rgba(255,255,255,0.9)", style: 'glass' },
+            "Dark Prism": { bg: "#0f172a", card: "rgba(15,23,42,0.5)", accent: "#f43f5e", text: "#fff", muted: "#94a3b8", border: "rgba(244,63,94,0.3)", style: 'glass' },
+            "Solarized Glass": { bg: "#fefce8", card: "rgba(255,255,255,0.5)", accent: "#ca8a04", text: "#713f12", muted: "#a16207", border: "rgba(255,255,255,0.8)", style: 'glass' },
+            "Ghostly Grey": { bg: "#f4f4f5", card: "rgba(255,255,255,0.4)", accent: "#71717a", text: "#18181b", muted: "#52525b", border: "rgba(255,255,255,0.6)", style: 'glass' },
+            "Cyber Neon Glass": { bg: "#000", card: "rgba(0,255,65,0.08)", accent: "#00ff41", text: "#fff", muted: "#008f11", border: "rgba(0,255,65,0.3)", style: 'glass' },
+            "Arctic Glass": { bg: "#f8fafc", card: "rgba(241,245,249,0.5)", accent: "#0ea5e9", text: "#0f172a", muted: "#64748b", border: "rgba(255,255,255,0.9)", style: 'glass' },
+            "Champagne Glass": { bg: "#fafaf9", card: "rgba(250,244,230,0.5)", accent: "#d4af37", text: "#444", muted: "#a8a29e", border: "rgba(255,255,255,0.7)", style: 'glass' },
+            "Void Glass": { bg: "#000", card: "rgba(0,0,0,0.5)", accent: "#ffffff", text: "#fff", muted: "#666", border: "rgba(255,255,255,0.2)", style: 'glass' },
+            "Dreamy Lavender": { bg: "#f5f3ff", card: "rgba(255,255,255,0.6)", accent: "#8b5cf6", text: "#4c1d95", muted: "#a78bfa", border: "rgba(255,255,255,0.9)", style: 'glass' },
+        };
+
+        window.onload = () => {
+            document.getElementById('current-date').innerText = new Date().toLocaleDateString('pt-BR', { 
+                weekday: 'long', year: 'numeric', month: 'long', day: 'numeric' 
+            });
+            loadTheme();
+            renderThemes();
+            renderGraphOptions();
+            updateUI();
+        };
+
+        function applyTheme(themeName) {
+            const theme = themes[themeName];
+            const root = document.documentElement;
+            root.style.setProperty('--bg-body', theme.bg);
+            root.style.setProperty('--bg-card', theme.card);
+            root.style.setProperty('--accent', theme.accent);
+            root.style.setProperty('--accent-glow', theme.accent + '4D');
+            root.style.setProperty('--text-main', theme.text);
+            root.style.setProperty('--text-muted', theme.muted);
+            root.style.setProperty('--border', theme.border);
+            
+            document.body.classList.remove('theme-3d', 'theme-glass', 'theme-matte');
+            if (theme.style === '3d') document.body.classList.add('theme-3d');
+            if (theme.style === 'glass') document.body.classList.add('theme-glass');
+            if (theme.style === 'matte') document.body.classList.add('theme-matte');
+
+            localStorage.setItem('selectedTheme', themeName);
+            document.querySelectorAll('.theme-option').forEach(opt => {
+                opt.classList.toggle('active', opt.dataset.theme === themeName);
+            });
+
+            updateAllCharts();
+        }
+
+        function loadTheme() {
+            const saved = localStorage.getItem('selectedTheme') || "Default";
+            applyTheme(saved);
+        }
+
+        function renderThemes() {
+            const grid = document.getElementById('themes-grid');
+            Object.keys(themes).forEach(name => {
+                const theme = themes[name];
+                const div = document.createElement('div');
+                div.className = 'theme-option';
+                div.dataset.theme = name;
+                const label = theme.style === 'glass' ? 'G' : theme.style === '3d' ? '3D' : theme.style === 'matte' ? 'M' : 'F';
+                div.innerHTML = `<div class="theme-preview" style="background:${theme.accent}">${label}</div>${name}`;
+                div.onclick = () => applyTheme(name);
+                grid.appendChild(div);
+            });
+        }
+
+        // --- LÓGICA DE WIDGETS DE GRÁFICOS ---
+        function renderGraphOptions() {
+            const list = document.getElementById('graphOptions');
+            graphPresets.forEach(preset => {
+                const btn = document.createElement('button');
+                btn.className = `graph-option-btn ${activeGraphs.includes(preset.id) ? 'active' : ''}`;
+                btn.innerHTML = `<i class="fa-solid fa-chart-simple"></i> ${preset.label}`;
+                btn.onclick = () => toggleGraphWidget(preset.id, btn);
+                list.appendChild(btn);
+            });
+        }
+
+        function toggleGraphWidget(id, btn) {
+            if (activeGraphs.includes(id)) {
+                activeGraphs = activeGraphs.filter(gId => gId !== id);
+                btn.classList.remove('active');
+            } else {
+                if (activeGraphs.length >= 3) {
+                    showModal({ title: 'Limite Atingido', message: 'Você pode adicionar no máximo 3 gráficos ao seu painel.', type: 'danger' });
+                    return;
+                }
+                activeGraphs.push(id);
+                btn.classList.add('active');
+            }
+            localStorage.setItem('activeGraphs', JSON.stringify(activeGraphs));
+            updateAllCharts();
+        }
+
+        function removeChartWidget(id) {
+            activeGraphs = activeGraphs.filter(gId => gId !== id);
+            localStorage.setItem('activeGraphs', JSON.stringify(activeGraphs));
+            document.querySelectorAll('.graph-option-btn').forEach(btn => {
+                const preset = graphPresets.find(p => p.label.toLowerCase().includes(btn.innerText.toLowerCase().split(' (')[0].toLowerCase()));
+                if (preset && preset.id === id) btn.classList.remove('active');
+            });
+            updateAllCharts();
+        }
+
+        function showModal({ title, message, type = 'info', confirmText = 'Ok', showCancel = false, onConfirm = null }) {
+            const overlay = document.getElementById('modalOverlay');
+            const icon = document.getElementById('modalIcon');
+            const titleEl = document.getElementById('modalTitle');
+            const msgEl = document.getElementById('modalMsg');
+            const btnsEl = document.getElementById('modalBtns');
+
+            titleEl.innerText = title;
+            msgEl.innerText = message;
+            btnsEl.innerHTML = '';
+
+            if (type === 'success') {
+                icon.innerHTML = '<i class="fa-solid fa-check"></i>';
+                icon.style.backgroundColor = 'var(--success)';
+                icon.style.color = 'white';
+            } else if (type === 'danger') {
+                icon.innerHTML = '<i class="fa-solid fa-triangle-exclamation"></i>';
+                icon.style.backgroundColor = 'var(--danger)';
+                icon.style.color = 'white';
+            } else {
+                icon.innerHTML = '<i class="fa-solid fa-circle-info"></i>';
+                icon.style.backgroundColor = 'var(--accent)';
+                icon.style.color = 'white';
+            }
+
+            const btnConfirm = document.createElement('button');
+            btnConfirm.className = 'btn-modal btn-confirm';
+            btnConfirm.innerText = confirmText;
+            btnConfirm.onclick = () => { overlay.style.display = 'none'; if (onConfirm) onConfirm(); };
+            btnsEl.appendChild(btnConfirm);
+
+            if (showCancel) {
+                const btnCancel = document.createElement('button');
+                btnCancel.className = 'btn-modal btn-cancel';
+                btnCancel.innerText = 'Cancelar';
+                btnCancel.onclick = () => { overlay.style.display = 'none'; };
+                btnsEl.prepend(btnCancel);
+            }
+            overlay.style.display = 'flex';
+        }
+
+        function saveTransaction() {
+            const desc = document.getElementById('desc').value;
+            const amount = document.getElementById('amount').value;
+            const type = document.getElementById('type').value;
+            const category = document.getElementById('category').value;
+            const obs = document.getElementById('obs').value;
+
+            if (!desc || !amount) return showModal({ title: 'Erro', message: 'Preencha a descrição e o valor!', type: 'danger' });
+
+            if (editingId) {
+                const index = transactions.findIndex(t => t.id === editingId);
+                if (index !== -1) {
+                    transactions[index] = { ...transactions[index], desc, amount: parseFloat(amount), type, category, obs };
+                }
+                editingId = null;
+            } else {
+                transactions.push({ id: Date.now(), desc, amount: parseFloat(amount), type, category, obs, date: new Date().toISOString() });
+            }
+
+            localStorage.setItem('transactions', JSON.stringify(transactions));
+            resetForm();
+            updateUI();
+            showModal({ title: 'Sucesso!', message: 'Lançamento processado com sucesso.', type: 'success', onConfirm: () => switchPage('dashboard', { currentTarget: document.querySelector('.menu-item.active') }) });
+        }
+
+        function editTransaction(id) {
+            const t = transactions.find(trans => trans.id === id);
+            if (!t) return;
+            editingId = id;
+            document.getElementById('desc').value = t.desc;
+            document.getElementById('amount').value = t.amount;
+            document.getElementById('type').value = t.type;
+            document.getElementById('category').value = t.category;
+            document.getElementById('obs').value = t.obs;
+            document.getElementById('form-title').innerText = "Editar Lançamento";
+            document.getElementById('btn-save').innerText = "Atualizar Lançamento";
+            document.getElementById('btn-cancel-edit').style.display = "block";
+            switchPage('registration', { currentTarget: document.querySelector('.menu-item[onclick*="registration"]') });
+        }
+
+        function resetForm() {
+            editingId = null;
+            document.getElementById('desc').value = '';
+            document.getElementById('amount').value = '';
+            document.getElementById('obs').value = '';
+            document.getElementById('form-title').innerText = "Novo Lançamento";
+            document.getElementById('btn-save').innerText = "Confirmar Lançamento";
+            document.getElementById('btn-cancel-edit').style.display = "none";
+        }
+
+        function deleteTransaction(id) {
+            showModal({
+                title: 'Excluir', message: 'Deseja realmente apagar este registro?',
+                type: 'danger', confirmText: 'Sim, apagar', showCancel: true,
+                onConfirm: () => {
+                    transactions = transactions.filter(t => t.id !== id);
+                    localStorage.setItem('transactions', JSON.stringify(transactions));
+                    updateUI();
+                }
+            });
+        }
+
+        // --- LÓGICA DE FILTRAGEM UNIFICADA CORRIGIDA ---
+        function getFilteredTransactions() {
+            const dashType = document.getElementById('dash-filter-type').value;
+            const dashCat = document.getElementById('dash-filter-cat').value;
+            const dashDate = document.getElementById('dash-filter-date').value;
+            
+            const histType = document.getElementById('hist-filter-type').value;
+            const histCat = document.getElementById('hist-filter-cat').value;
+            const histDate = document.getElementById('hist-filter-date').value;
+
+            const activePage = document.querySelector('.menu-item.active') ? document.querySelector('.menu-item.active').innerText.toLowerCase() : 'dashboard';
+            const useDash = activePage.includes('dashboard');
+            
+            const type = useDash ? dashType : histType;
+            const cat = useDash ? dashCat : histCat;
+            const date = useDash ? dashDate : histDate;
+
+            return transactions.filter(t => {
+                const tDate = t.date.split('T')[0];
+                const matchType = type === 'all' || t.type === type;
+                const matchCat = cat === 'all' || t.category === cat;
+                const matchDate = !date || tDate === date;
+                return matchType && matchCat && matchDate;
+            });
+        }
+
+        function updateUI() {
+            const filtered = getFilteredTransactions();
+            const listContainer = document.getElementById('list-container');
+            const now = new Date();
+            
+            listContainer.innerHTML = '';
+            let mIncome = 0, mExpense = 0;
+
+            filtered.slice().reverse().forEach(t => {
+                const tDate = new Date(t.date);
+                if (tDate.getMonth() === now.getMonth() && tDate.getFullYear() === now.getFullYear()) {
+                    if (t.type === 'income') mIncome += t.amount; else mExpense += t.amount;
+                }
+                listContainer.innerHTML += `
+                    <div class="transaction-item">
+                        <div class="item-info">
+                            <div class="item-icon"><i class="fa-solid ${t.type === 'income' ? 'fa-arrow-up' : 'fa-arrow-down'}"></i></div>
+                            <div>
+                                <div style="font-weight: 500">${t.desc} <span style="font-size: 0.7rem; color: var(--accent);">[${t.category}]</span></div>
+                                <div style="font-size: 0.7rem; color: var(--text-muted)">${tDate.toLocaleDateString()} - ${t.obs || 'Sem obs.'}</div>
+                            </div>
+                        </div>
+                        <div style="display: flex; align-items: center; gap: 15px;">
+                            <span class="${t.type === 'income' ? 'amount-pos' : 'amount-neg'}">${t.type === 'income' ? '+' : '-'} R$ ${t.amount.toFixed(2)}</span>
+                            <i class="fa-solid fa-pen-to-square" onclick="editTransaction(${t.id})" style="cursor:pointer; color: var(--accent); font-size: 0.8rem" title="Editar"></i>
+                            <i class="fa-solid fa-trash-can" onclick="deleteTransaction(${t.id})" style="cursor:pointer; color: #3f3f46; font-size: 0.8rem" title="Excluir"></i>
+                        </div>
+                    </div>`;
+            });
+
+            document.getElementById('month-income').innerText = `R$ ${mIncome.toFixed(2)}`;
+            document.getElementById('month-expense').innerText = `R$ ${mExpense.toFixed(2)}`;
+            document.getElementById('month-balance').innerText = `R$ ${(mIncome - mExpense).toFixed(2)}`;
+            
+            updateAllCharts();
+        }
+
+        function updateAllCharts() {
+            const filtered = getFilteredTransactions();
+            const grid = document.getElementById('chartsGrid');
+            grid.innerHTML = '';
+            
+            Object.values(chartsInstances).forEach(chart => chart.destroy());
+            chartsInstances = {};
+
+            const categoryData = {};
+            let totalIncome = 0, totalExpense = 0;
+
+            filtered.forEach(t => {
+                if (t.type === 'income') {
+                    totalIncome += t.amount;
+                } else {
+                    totalExpense += t.amount;
+                    categoryData[t.category] = (categoryData[t.category] || 0) + t.amount;
+                }
+            });
+
+            const accentColor = getComputedStyle(document.documentElement).getPropertyValue('--accent').trim();
+            const palette = syncColorsWithTheme(accentColor, Object.keys(categoryData).length || 5);
+
+            activeGraphs.forEach(graphId => {
+                const preset = graphPresets.find(p => p.id === graphId);
+                const widget = document.createElement('div');
+                widget.className = 'chart-widget reveal';
+                widget.innerHTML = `
+                    <div class="chart-widget-header">
+                        <h4>${preset.label}</h4>
+                        <button class="remove-chart-btn" onclick="removeChartWidget('${graphId}')"><i class="fa-solid fa-trash-can"></i></button>
+                    </div>
+                    <div style="flex: 1; position: relative;"><canvas id="chart-${graphId}"></canvas></div>
+                `;
+                grid.appendChild(widget);
+
+                const ctx = document.getElementById(`chart-${graphId}`).getContext('2d');
+                let data = {};
+                
+                if (preset.metric === 'category') {
+                    data = { labels: Object.keys(categoryData), datasets: [{ data: Object.values(categoryData), backgroundColor: palette, borderWidth: 0 }] };
+                } else if (preset.metric === 'comparison') {
+                    data = { labels: ['Receitas', 'Despesas'], datasets: [{ data: [totalIncome, totalExpense], backgroundColor: ['#10b981', '#f43f5e'], borderRadius: 10 }] };
+                } else {
+                    data = { labels: ['Filtrado'], datasets: [{ data: [totalExpense], borderColor: accentColor, backgroundColor: accentColor + '33', fill: preset.fill, tension: 0.4 }] };
+                }
+
+                chartsInstances[graphId] = new Chart(ctx, {
+                    type: preset.type,
+                    data: data,
+                    options: {
+                        responsive: true,
+                        maintainAspectRatio: false,
+                        plugins: {
+                            legend: { display: true, position: 'bottom', labels: { color: '#a1a1aa', font: { family: 'Inter', size: 11 } } },
+                            tooltip: { backgroundColor: '#121214', titleColor: '#fff', bodyColor: '#fff' }
+                        },
+                        scales: (preset.type !== 'pie' && preset.type !== 'doughnut' && preset.type !== 'polarArea' && preset.type !== 'radar') ? {
+                            y: { beginAtZero: true, grid: { color: 'rgba(255,255,255,0.05)' }, ticks: { color: '#a1a1aa' } },
+                            x: { grid: { display: false }, ticks: { color: '#a1a1aa' } }
+                        } : {}
+                    }
+                });
+            });
+        }
+
+        function syncColorsWithTheme(baseColor, count) {
+            const colors = [];
+            for (let i = 0; i < count; i++) {
+                colors.push(`hsl(${(i * 40) % 360}, 70%, 60%)`);
+            }
+            return colors;
+        }
+
+        function switchPage(page, event) {
+            const pages = ['dashboard', 'registration', 'history', 'settings'];
+            const titles = { 'dashboard': 'Dashboard Financeiro', 'registration': 'Lançar Transação', 'history': 'Histórico de Gastos', 'settings': 'Temas e Estilos' };
+            pages.forEach(p => document.getElementById(`${p}-page`).style.display = 'none');
+            document.getElementById(`${page}-page`).style.display = 'block';
+            document.getElementById('page-title').innerText = titles[page];
+            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
+            if(event && event.currentTarget) event.currentTarget.classList.add('active');
+            if (page === 'dashboard') updateAllCharts();
+        }
+    </script>
+</body>
+</html>
