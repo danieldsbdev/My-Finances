@@ -26,7 +26,7 @@
             --transition: all 0.3s cubic-bezier(0.4, 0, 0.2, 1);
         }
 
-        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; }
+        * { margin: 0; padding: 0; box-sizing: border-box; font-family: 'Inter', sans-serif; -webkit-tap-highlight-color: transparent; }
         body { background-color: var(--bg-body); color: var(--text-main); min-height: 100vh; overflow-x: hidden; transition: background 0.5s ease; }
 
         @keyframes slideUp { from { opacity: 0; transform: translateY(20px); } to { opacity: 1; transform: translateY(0); } }
@@ -89,7 +89,7 @@
 
         #app { display: grid; grid-template-columns: 280px 1fr; min-height: 100vh; }
 
-        /* Sidebar */
+        /* SIDEBAR DESKTOP */
         nav { background: var(--bg-card); border-right: 1px solid var(--border); padding: 2rem 1.5rem; display: flex; flex-direction: column; position: sticky; top: 0; height: 100vh; transition: var(--transition); }
         .logo { font-size: 1.2rem; font-weight: 700; margin-bottom: 3rem; display: flex; align-items: center; gap: 10px; color: var(--text-main); }
         .logo i { color: var(--accent); font-size: 1.5rem; }
@@ -181,8 +181,8 @@
         .settings-tabs { display: flex; gap: 1rem; margin-bottom: 2rem; border-bottom: 1px solid var(--border); padding-bottom: 1rem; }
         .tab-btn { background: none; border: none; color: var(--text-muted); cursor: pointer; font-size: 1rem; font-weight: 600; padding: 8px 16px; transition: var(--transition); border-radius: 8px; }
         .tab-btn.active { color: var(--text-main); background: var(--accent); }
-        .user-table-wrapper { width: 100%; overflow-x: auto; }
-        .user-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; min-width: 400px; }
+        .user-table-wrapper { width: 100%; overflow-x: auto; -webkit-overflow-scrolling: touch; }
+        .user-table { width: 100%; border-collapse: collapse; background: var(--bg-card); border: 1px solid var(--border); border-radius: 16px; overflow: hidden; min-width: 500px; }
         .user-table th, .user-table td { padding: 15px; text-align: left; border-bottom: 1px solid var(--border); }
         .user-table th { background: #1a1a1c; color: var(--text-muted); font-size: 0.8rem; }
         .btn-action { padding: 6px 12px; border-radius: 8px; border: none; cursor: pointer; font-size: 0.75rem; font-weight: 600; transition: var(--transition); }
@@ -203,54 +203,111 @@
         .btn-confirm { background: var(--accent); color: white; }
         .btn-cancel { background: #27272a; color: var(--text-main); }
 
-        /* --- RESPONSIVIDADE EXTREMA --- */
+        /* --- ADAPTAÇÃO MOBILE ABSOLUTA --- */
         @media (max-width: 1024px) {
-            #app { grid-template-columns: 1fr; }
-            nav { 
-                position: fixed; bottom: 20px; left: 50%; transform: translateX(-50%); 
-                width: 90%; max-width: 500px; height: auto; 
-                flex-direction: row; justify-content: space-around; 
-                padding: 12px; border: 1px solid var(--border); 
-                border-radius: 25px; z-index: 1000; 
-                background: rgba(18, 18, 20, 0.8); 
-                backdrop-filter: blur(15px);
-                box-shadow: 0 10px 30px rgba(0,0,0,0.5);
+            #app { 
+                grid-template-columns: 1fr !important; 
+                display: block !important; 
             }
-            .logo, .nav-group { display: none; }
-            .nav-group-mobile { display: flex; width: 100%; justify-content: space-around; gap: 5px; }
-            .menu-item { 
-                flex-direction: column; gap: 4px; font-size: 0.65rem; 
-                padding: 10px; text-align: center; flex: 1;
-            }
-            .menu-item i { font-size: 1.2rem; }
             
-            main { padding: 1.5rem; padding-bottom: 100px; }
+            nav { 
+                position: fixed !important; 
+                bottom: 20px !important; 
+                left: 50% !important; 
+                transform: translateX(-50%) !important; 
+                width: 92% !important; 
+                max-width: 480px !important; 
+                height: auto !important; 
+                flex-direction: row !important; 
+                justify-content: space-around !important; 
+                padding: 10px !important; 
+                border: 1px solid var(--border) !important; 
+                border-radius: 25px !important; 
+                z-index: 1000 !important; 
+                background: rgba(18, 18, 20, 0.9) !important; 
+                backdrop-filter: blur(20px) !important; 
+                -webkit-backdrop-filter: blur(20px) !important;
+                box-shadow: 0 10px 30px rgba(0,0,0,0.6) !important;
+                top: auto !important;
+                bottom: calc(20px + env(safe-area-inset-bottom)) !important;
+            }
+            
+            .logo, .nav-group { display: none !important; }
+            
+            .nav-group-mobile { 
+                display: flex !important; 
+                width: 100% !important; 
+                justify-content: space-around !important; 
+                gap: 5px !important; 
+            }
+            .menu-item { 
+                flex-direction: column !important; 
+                gap: 6px !important; 
+                font-size: 0.65rem !important; 
+                padding: 10px 5px !important; 
+                text-align: center !important; 
+                flex: 1 !important;
+                background: transparent !important;
+                box-shadow: none !important;
+                color: var(--text-muted) !important;
+            }
+            .menu-item.active {
+                background: var(--accent) !important;
+                color: white !important;
+                box-shadow: 0 4px 12px var(--accent-glow) !important;
+            }
+            .menu-item i { font-size: 1.3rem !important; }
+            
+            main { padding: 1.5rem; padding-bottom: 120px; }
             
             .header { 
-                flex-direction: column; 
-                align-items: flex-start; 
-                gap: 15px; 
-                margin-bottom: 2rem; 
+                flex-direction: column !important; 
+                align-items: flex-start !important; 
+                gap: 20px !important; 
+                margin-bottom: 2rem !important; 
             }
+            .header h1 { font-size: 1.6rem !important; }
             .header div:last-child { 
                 text-align: left !important; 
-                width: 100%; 
-                display: flex; 
-                justify-content: space-between; 
-                align-items: center; 
+                width: 100% !important; 
+                display: flex !important; 
+                justify-content: space-between !important; 
+                align-items: center !important; 
+                border-top: 1px solid var(--border);
+                padding-top: 15px;
             }
-            .logout-btn { margin-bottom: 0; }
+            .logout-btn { margin-bottom: 0 !important; padding: 8px 12px !important; }
 
-            .bento-grid { grid-template-columns: 1fr; gap: 1rem; }
-            .analytics-section { grid-template-columns: 1fr; }
-            .charts-grid { grid-template-columns: 1fr; }
-            .input-grid { grid-template-columns: 1fr; }
-            .full-width { grid-column: span 1; }
-            .filter-bar { flex-direction: column; align-items: stretch; gap: 1rem; }
-            .form-container { padding: 1.5rem; }
+            .filter-bar { 
+                flex-direction: column !important; 
+                align-items: stretch !important; 
+                gap: 1rem !important; 
+                padding: 1.2rem !important;
+            }
+            .filter-group { 
+                flex-direction: column !important; 
+                align-items: flex-start !important; 
+                gap: 5px !important; 
+            }
+            .filter-group label { margin-bottom: 2px !important; }
+
+            .bento-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+            .bento-card { padding: 1.2rem !important; }
+            .card-value { font-size: 1.6rem !important; }
+
+            .analytics-section { grid-template-columns: 1fr !important; gap: 1.5rem !important; }
+            .graph-selector { padding: 1.2rem !important; }
+            .charts-grid { grid-template-columns: 1fr !important; }
+            .chart-widget { 
+                padding: 1rem !important; 
+                min-height: 350px !important; 
+            }
+            .input-grid { grid-template-columns: 1fr !important; gap: 1rem !important; }
+            .full-width { grid-column: span 1 !important; }
+            .form-container { padding: 1.5rem !important; }
         }
         .nav-group-mobile { display: none; }
-        @media (max-width: 1024px) { .nav-group-mobile { display: flex; } }
+        @media (max-width: 1024px) { .nav-group-mobile { display: flex !important; } }
     </style>
 </head>
 <body id="body">
@@ -313,7 +370,7 @@
 
         <main>
             <div class="header reveal">
-                <div>
+                <div style="display: flex; flex-direction: column; gap: 5px;">
                     <p id="current-date"></p>
                     <h1 id="page-title">Dashboard Financeiro</h1>
                 </div>
@@ -453,7 +510,7 @@
                     </div>
                     <div class="filter-group">
                         <label>Data:</label>
-                        <input type="date" id="hist-filter-date" onchange="updateUI()">
+                        <input type="date" id="hist-//-filter-date" onchange="updateUI()">
                     </div>
                 </div>
 
@@ -697,6 +754,7 @@
                 unlockApp();
                 initUserData();
                 updateUI();
+                restoreLastPage(); // RESTAURA A PÁGINA ONDE O USUÁRIO ESTAVA
             } else {
                 showModal({ title: 'Erro', message: 'Usuário ou senha incorretos!', type: 'danger' });
             }
@@ -725,7 +783,36 @@
             localStorage.setItem('transactions_' + currentUser, JSON.stringify(transactions));
         }
 
-        // --- CONFIGURAÇÕES E GESTÃO DE CONTAS ---
+        // --- NAVEGAÇÃO E MEMÓRIA DE PÁGINA ---
+        function restoreLastPage() {
+            const lastPage = localStorage.getItem('lastPage') || 'dashboard';
+            switchPage(lastPage, null);
+        }
+
+        function switchPage(page, event) {
+            const pages = ['dashboard', 'registration', 'history', 'settings'];
+            const titles = { 'dashboard': 'Dashboard Financeiro', 'registration': 'Lançar Transação', 'history': 'Histórico de Gastos', 'settings': 'Configurações do Sistema' };
+            
+            pages.forEach(p => document.getElementById(`${p}-page`).style.display = 'none');
+            document.getElementById(`${page}-page`).style.display = 'block';
+            document.getElementById('page-title').innerText = titles[page];
+            
+            // Gerencia a classe active nos menus automaticamente
+            document.querySelectorAll('.menu-item').forEach(item => {
+                item.classList.remove('active');
+                // Verifica se o item de menu é o responsável pela página atual
+                if (item.getAttribute('onclick') && item.getAttribute('onclick').includes(`'${page}'`)) {
+                    item.classList.add('active');
+                }
+            });
+
+            // SALVA a página atual na memória do navegador
+            localStorage.setItem('lastPage', page);
+
+            if (page === 'dashboard') updateAllCharts();
+        }
+
+        // --- CONFIGURAÇÕES E GESTÃO de CONTAS ---
         function switchTab(tab, btn) {
             document.querySelectorAll('.tab-btn').forEach(b => b.classList.remove('active'));
             btn.classList.add('active');
@@ -820,7 +907,7 @@
             persistTransactions();
             resetForm();
             updateUI();
-            showModal({ title: 'Sucesso!', message: 'Lançamento processado.', type: 'success', onConfirm: () => switchPage('dashboard', { currentTarget: document.querySelector('.menu-item.active') }) });
+            showModal({ title: 'Sucesso!', message: 'Lançamento processado.', type: 'success', onConfirm: () => switchPage('dashboard', null) });
         }
 
         function editTransaction(id) {
@@ -835,7 +922,7 @@
             document.getElementById('form-title').innerText = "Editar Lançamento";
             document.getElementById('btn-save').innerText = "Atualizar Lançamento";
             document.getElementById('btn-cancel-edit').style.display = "block";
-            switchPage('registration', { currentTarget: document.querySelector('.menu-item[onclick*="registration"]') });
+            switchPage('registration', null);
         }
 
         function resetForm() {
@@ -952,7 +1039,7 @@
                 widget.className = 'chart-widget reveal';
                 widget.innerHTML = `
                     <div class="chart-widget-header">
-                        <h4>${preset.label}</h4>
+                        <h4 style="font-size: 0.9rem">${preset.label}</h4>
                         <button class="remove-chart-btn" onclick="removeChartWidget('${graphId}')"><i class="fa-solid fa-trash-can"></i></button>
                     </div>
                     <div style="flex: 1; position: relative; height: 300px;"><canvas id="chart-${graphId}"></canvas></div>
@@ -993,17 +1080,6 @@
             const colors = [];
             for (let i = 0; i < count; i++) colors.push(`hsl(${(i * 40) % 360}, 70%, 60%)`);
             return colors;
-        }
-
-        function switchPage(page, event) {
-            const pages = ['dashboard', 'registration', 'history', 'settings'];
-            const titles = { 'dashboard': 'Dashboard Financeiro', 'registration': 'Lançar Transação', 'history': 'Histórico de Gastos', 'settings': 'Configurações do Sistema' };
-            pages.forEach(p => document.getElementById(`${p}-page`).style.display = 'none');
-            document.getElementById(`${page}-page`).style.display = 'block';
-            document.getElementById('page-title').innerText = titles[page];
-            document.querySelectorAll('.menu-item').forEach(item => item.classList.remove('active'));
-            if(event && event.currentTarget) event.currentTarget.classList.add('active');
-            if (page === 'dashboard') updateAllCharts();
         }
 
         function showModal({ title, message, type = 'info', confirmText = 'Ok', showCancel = false, onConfirm = null }) {
